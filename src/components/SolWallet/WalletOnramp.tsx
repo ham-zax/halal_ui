@@ -1,31 +1,42 @@
 import { useCallback } from 'react'
 import { Box, Button } from '@chakra-ui/react'
-import { Wallet, useWallet } from '@solana/wallet-adapter-react'
-import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { useEvent } from '@/hooks/useEvent'
 import SelectWalletModal from './SelectWalletModal'
 import { colors } from '@/theme/cssVariables'
 import { useTranslation } from 'react-i18next'
-import { MoonpayBuy } from '@/components/Moonpay'
+// import { MoonpayBuy } from '@/components/Moonpay'
 import MoonPayIcon from '@/icons/misc/MoonPayIcon'
+import { useAppStore } from '@/store/mockAppStore'
 
 export default function WalletOnramp() {
-  const { wallets, select, connected, connecting } = useWallet()
+  const { 
+    wallets, 
+    select, 
+    connected, 
+    connecting, 
+    visible, 
+    setVisible, 
+    connect 
+  } = useAppStore()
   const { t } = useTranslation()
-  const { setVisible, visible } = useWalletModal()
 
   const handleClose = useCallback(() => setVisible(false), [setVisible])
-  const handleOpen = useCallback(() => setVisible(true), [setVisible])
+  const handleOpen = useCallback(() => {
+    setVisible(true)
+    connect()
+  }, [setVisible, connect])
 
-  const handleSelectWallet = useEvent((wallet: Wallet) => {
+  const handleSelectWallet = useEvent((wallet: { adapter: { name: string } }) => {
     select(wallet.adapter.name)
     handleClose()
   })
 
+
   if (connected)
     return (
       <>
-        <MoonpayBuy>
+        MoonpayBuy was here
+      {/*   <MoonpayBuy>
           <Box className="p-mp__submit" maxW="320px" w="100%" m="auto">
             <Button
               width="full"
@@ -41,7 +52,7 @@ export default function WalletOnramp() {
               {t('button.deposit')}
             </Button>
           </Box>
-        </MoonpayBuy>
+        </MoonpayBuy> */}
       </>
     )
   return (
@@ -49,7 +60,8 @@ export default function WalletOnramp() {
       <Button isLoading={connecting} loadingText="Connecting.." onClick={handleOpen}>
         {t('button.connect_wallet')}
       </Button>
-      <SelectWalletModal wallets={wallets} isOpen={visible} onClose={handleClose} onSelectWallet={handleSelectWallet} />
+      select wallet modal was here
+      {/* <SelectWalletModal wallets={wallets} isOpen={visible} onClose={handleClose} onSelectWallet={handleSelectWallet} /> */}
     </Box>
   )
 }

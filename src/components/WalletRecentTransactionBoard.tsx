@@ -214,12 +214,13 @@ export default function WalletRecentTransactionBoard({ wallet, address, isOpen =
           <VStack w="full" gap={4}>
             <Flex justifyContent="center" alignItems="center" color={colors.lightPurple}>
               <Text fontSize="xs">{t('wallet_connect_panel.sell_crypto')}</Text>
-              <MoonpaySell>
+              MoonpaySell was here
+              {/* <MoonpaySell>
                 <HStack gap={0}>
                   <MoonPayIconWithText />
                   <ChevronRightIcon width={'16px'} height={'16px'} />
                 </HStack>
-              </MoonpaySell>
+              </MoonpaySell> */}
             </Flex>
             <Text
               w="full"

@@ -11,7 +11,7 @@ import MobileIcon from '@/icons/misc/MobileIcon'
 import DesktopIcon from '@/icons/misc/DesktopIcon'
 import MoonPayIconWithText from '@/icons/misc/MoonPayIconWithText'
 import { QuestionToolTip } from '@/components/QuestionToolTip'
-import { MoonpayBuy } from '@/components/Moonpay'
+// // import { MoonpayBuy } from '@/components/Moonpay'
 import ExternalLink from '@/icons/misc/ExternalLink'
 import { colors } from '@/theme/cssVariables'
 import {
@@ -35,11 +35,27 @@ import {
   ListItem,
   useColorMode
 } from '@chakra-ui/react'
-import { WalletReadyState } from '@solana/wallet-adapter-base'
-import { Wallet } from '@solana/wallet-adapter-react'
+enum WalletReadyState {
+  Installed = 'Installed',
+  NotDetected = 'NotDetected',
+  Loadable = 'Loadable',
+  Unsupported = 'Unsupported'
+}
+
+// Mock Wallet type
+interface Wallet {
+  adapter: {
+    name: string;
+    icon: string;
+  };
+  readyState: WalletReadyState;
+}
+/* import { WalletReadyState } from '@solana/wallet-adapter-base'
+import { Wallet } from '@solana/wallet-adapter-react' */
 import { useState, useCallback } from 'react'
 import { useTranslation, Trans } from 'react-i18next'
 import NextLink from 'next/link'
+import { useAppStore } from '@/store/mockAppStore'
 
 interface Props {
   wallets: Wallet[]
@@ -50,7 +66,7 @@ interface Props {
 
 // type Network = { name: string; icon?: JSX.Element }
 
-export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onClose }: Props) {
+export default function SelectWalletModal({ isOpen, onSelectWallet, onClose }: Props) {
   const { t } = useTranslation()
   /*
   const networks: Network[] = [
@@ -63,13 +79,10 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
   const [currentNetwork, setCurrentNetwork] = useState('Solana')
   const connectedNetworks = ['Solana', 'Avalanche']
   */
+  const { wallets } = useAppStore()
+
   const [canShowUninstalledWallets, setCanShowUninstalledWallets] = useState(false)
   const [isWalletNotInstalled, setIsWalletNotInstalled] = useState(false)
-
-  const { recommendedWallets, notInstalledWallets } = splitWallets(wallets)
-
-  const phantomWallet = recommendedWallets.find((w) => w.adapter.name === 'Phantom')
-
   const handleCloseComplete = useCallback(() => setIsWalletNotInstalled(false), [setIsWalletNotInstalled])
 
   return (
@@ -117,23 +130,7 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
                 </Flex>
               </Flex>
               <Flex flexDirection="column" px={3} mt={12}>
-                <Button
-                  variant="ghost"
-                  w="full"
-                  borderRadius="8px"
-                  fontWeight="normal"
-                  _hover={{ fontWeight: 'medium', border: `1px solid ${colors.buttonPrimary}` }}
-                  onClick={() => {
-                    if (!phantomWallet || phantomWallet.readyState == WalletReadyState.NotDetected) {
-                      window.location.reload()
-                    } else {
-                      onSelectWallet(phantomWallet)
-                      onClose()
-                    }
-                  }}
-                >
-                  {t('wallet_connect_panel.wallet_installed_refresh_page')}
-                </Button>
+               
                 <Button
                   variant="ghost"
                   w="full"
@@ -182,20 +179,7 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
                 </Text>
                 {/* have divider  */}
                 <SimpleGrid gridTemplateColumns={['1fr', '1fr 1fr']} rowGap={['10px', 3]} columnGap={4}>
-                  {recommendedWallets.map((wallet) => (
-                    <WalletItem
-                      key={wallet.adapter.name}
-                      selectable
-                      wallet={wallet}
-                      onClick={(wallet) => {
-                        if (wallet.readyState == WalletReadyState.NotDetected && wallet.adapter.name === 'Phantom') {
-                          setIsWalletNotInstalled(true)
-                          return
-                        }
-                        onSelectWallet(wallet)
-                      }}
-                    />
-                  ))}
+                recommended wallets
                 </SimpleGrid>
 
                 <Collapse in={canShowUninstalledWallets}>
@@ -206,9 +190,7 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
                   </HStack>
 
                   <SimpleGrid opacity={0.5} gridTemplateColumns="1fr 1fr" rowGap={3} columnGap={4}>
-                    {notInstalledWallets.map((wallet) => (
-                      <WalletItem selectable={false} key={wallet.adapter.name} wallet={wallet} onClick={onSelectWallet} />
-                    ))}
+                    not installed wallets
                   </SimpleGrid>
                 </Collapse>
               </Box>
@@ -251,13 +233,14 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
                 </Link>
               </Flex>
               <Flex justifyContent="center" alignItems="center" color={colors.lightPurple} pt={4}>
-                <Text fontSize="xs">{t('wallet_connect_panel.buy_crypto_with_fiat')}</Text>
-                <MoonpayBuy>
+                  <Text fontSize="xs">{t('wallet_connect_panel.buy_crypto_with_fiat')}</Text>
+                  MoonPay was here
+               {/*  <MoonpayBuy>
                   <HStack gap={0}>
                     <MoonPayIconWithText />
                     <ChevronRightIcon width={'16px'} height={'16px'} />
                   </HStack>
-                </MoonpayBuy>
+                </MoonpayBuy> */}
               </Flex>
             </Box>
           </ModalBody>
@@ -266,6 +249,7 @@ export default function SelectWalletModal({ wallets, isOpen, onSelectWallet, onC
     </Modal>
   )
 }
+
 
 function WalletItem({
   selectable = true,

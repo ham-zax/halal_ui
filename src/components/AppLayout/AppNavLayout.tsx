@@ -174,7 +174,7 @@ function AppNavLayout({
           <PriorityButton />
           <SettingsMenu />
           {/* <EVMWallet />  don't need currently yet*/}
-          <SolWallet />
+          {/* <SolWallet /> */}
         </Flex>
       </HStack>
 

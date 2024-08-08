@@ -1,8 +1,8 @@
-import { loadMoonPay } from '@moonpay/moonpay-js'
+/* import { loadMoonPay } from '@moonpay/moonpay-js'
 import { Box } from '@chakra-ui/react'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react' */
 
-export function MoonpayBuy(props: { children: ReactNode }) {
+/* export function MoonpayBuy(props: { children: ReactNode }) {
   const [moonPaySdk, setMoonPaySdk] = useState(undefined as any)
   useEffect(() => {
     if (moonPaySdk) {
@@ -33,9 +33,9 @@ export function MoonpayBuy(props: { children: ReactNode }) {
       {props.children}
     </Box>
   )
-}
+} */
 
-export function MoonpaySell(props: { children: ReactNode }) {
+/* export function MoonpaySell(props: { children: ReactNode }) {
   const [moonPaySdk, setMoonPaySdk] = useState(undefined as any)
   useEffect(() => {
     if (moonPaySdk) {
@@ -66,4 +66,4 @@ export function MoonpaySell(props: { children: ReactNode }) {
       {props.children}
     </Box>
   )
-}
+} */

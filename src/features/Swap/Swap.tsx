@@ -23,7 +23,7 @@ import { TimeType } from '@/hooks/pool/useFetchPoolKLine'
 import { SlippageAdjuster } from '@/components/SlippageAdjuster'
 import { getMintPriority } from '@/utils/token'
 import Tooltip from '@/components/Tooltip'
-import { MoonpayBuy } from '@/components/Moonpay'
+// import { MoonpayBuy } from '@/components/Moonpay'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
 
 export default function Swap() {
@@ -133,9 +133,10 @@ export default function Swap() {
             <LinkIcon />
           </Box>
         </Tooltip>
-        <MoonpayBuy>
+        MoonpayBuy was gere
+        {/* <MoonpayBuy>
           <DollarIcon />
-        </MoonpayBuy>
+        </MoonpayBuy> */}
 
         {!isMobile && isPCChartShown && (
           <Box

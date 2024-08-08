@@ -16,14 +16,23 @@ export enum TxVersion {
   V0,
   Legacy
 }
-
+interface Wallet {
+  adapter: {
+    name: string;
+    icon: string;
+  };
+}
 interface MockAppState {
   isMobile: boolean
   isLaptop: boolean
   aprMode: 'M' | 'D'
   connected: boolean
   explorerUrl: string
-
+  wallets: Wallet[];
+  selectedWallet: Wallet | null;
+  connecting: boolean;
+  visible: boolean;
+  publicKey: string | null;
   displayTokenSettings: {
     official: boolean
     jup: boolean
@@ -38,7 +47,17 @@ interface MockAppState {
   priorityMode: PriorityMode
   transactionFee?: string
   feeConfig: Partial<Record<PriorityLevel, number>>
+ 
+  setConnected: (isConnected: boolean) => void
+  setWallets: (wallets: Wallet[]) => void;
+  setSelectedWallet: (wallet: Wallet | null) => void;
+  setConnecting: (connecting: boolean) => void;
+  setVisible: (visible: boolean) => void;
+  setPublicKey: (publicKey: string | null) => void;
 
+  select: (walletName: string) => void;
+  connect: () => void;
+  disconnect: () => void;
   getPriorityFee: () => string | undefined
   setAprMode: (mode: 'M' | 'D') => void
   setDisplayTokenSettings: (settings: Partial<MockAppState['displayTokenSettings']>) => void
@@ -52,6 +71,7 @@ const initialState: MockAppState = {
   isLaptop: false,
   aprMode: 'M',
   connected: false,
+
   explorerUrl: 'https://explorer.solana.com',
 
   displayTokenSettings: {
@@ -74,11 +94,43 @@ const initialState: MockAppState = {
   transactionFee: '0.0003',
 
   getPriorityFee: () => '0.0003',
-  setAprMode: () => {},
-  setDisplayTokenSettings: () => {},
-  setPriorityLevel: () => {},
-  setPriorityMode: () => {},
-  setTransactionFee: () => {},
+  setAprMode: () => { },
+  setDisplayTokenSettings: () => { },
+  setPriorityLevel: () => { },
+  setPriorityMode: () => { },
+  setTransactionFee: () => { },
+  wallets: [],
+  selectedWallet: null,
+  connecting: false,
+  visible: false,
+  publicKey: null,
+  setConnected: function (isConnected: boolean): void {
+    throw new Error('Function not implemented.');
+  },
+  setWallets: function (wallets: Wallet[]): void {
+    throw new Error('Function not implemented.');
+  },
+  setSelectedWallet: function (wallet: Wallet | null): void {
+    throw new Error('Function not implemented.');
+  },
+  setConnecting: function (connecting: boolean): void {
+    throw new Error('Function not implemented.');
+  },
+  setVisible: function (visible: boolean): void {
+    throw new Error('Function not implemented.');
+  },
+  setPublicKey: function (publicKey: string | null): void {
+    throw new Error('Function not implemented.');
+  },
+  select: function (walletName: string): void {
+    throw new Error('Function not implemented.');
+  },
+  connect: function (): void {
+    throw new Error('Function not implemented.');
+  },
+  disconnect: function (): void {
+    throw new Error('Function not implemented.');
+  }
 }
 
 export const useMockAppStore = create<MockAppState>((set, get) => ({
@@ -93,10 +145,42 @@ export const useMockAppStore = create<MockAppState>((set, get) => ({
 
   setAprMode: (mode) => set({ aprMode: mode }),
 
+  setWallets: (wallets) => set({ wallets }),
+  setSelectedWallet: (wallet) => set({ selectedWallet: wallet }),
+  setConnected: (connected) => set({ connected }),
+  setConnecting: (connecting) => set({ connecting }),
+  setVisible: (visible) => set({ visible }),
+  setPublicKey: (publicKey) => set({ publicKey }),
   setDisplayTokenSettings: (settings) => set((state) => ({
     displayTokenSettings: { ...state.displayTokenSettings, ...settings }
   })),
 
+  select: (walletName) => {
+    const { wallets } = get();
+    const wallet = wallets.find(w => w.adapter.name === walletName);
+    if (wallet) {
+      set({ selectedWallet: wallet });
+    }
+  },
+
+  connect: () => {
+    set({ connecting: true });
+    setTimeout(() => {
+      set({ 
+        connected: true, 
+        connecting: false, 
+        publicKey: 'mock-public-key'
+      });
+    }, 1000);
+  },
+
+  disconnect: () => {
+    set({ 
+      connected: false, 
+      selectedWallet: null, 
+      publicKey: null 
+    });
+  },
   setPriorityLevel: (level) => set({ priorityLevel: level }),
 
   setPriorityMode: (mode) => set({ priorityMode: mode }),

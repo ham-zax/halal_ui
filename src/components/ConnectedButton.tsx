@@ -1,4 +1,5 @@
-import { useAppStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { Button, ButtonProps } from '@chakra-ui/react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { LegacyRef, PropsWithChildren, forwardRef, useCallback } from 'react'

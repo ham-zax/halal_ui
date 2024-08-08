@@ -21,7 +21,9 @@ import { useEvent } from '@/hooks/useEvent'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
 import BalanceWalletIcon from '@/icons/misc/BalanceWalletIcon'
 import ChevronDownIcon from '@/icons/misc/ChevronDownIcon'
-import { useAppStore, useTokenAccountStore, useTokenStore } from '@/store'
+import { useTokenAccountStore, useTokenStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
 import { trimTrailZero, formatCurrency, formatToRawLocaleStr, detectedSeparator } from '@/utils/numberish/formatter'
 

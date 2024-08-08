@@ -1,5 +1,6 @@
 import ExclaimationOctagon from '@/icons/misc/ExclaimationOctagon'
-import { useAppStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { panelCard } from '@/theme/cssBlocks'
 import { colors } from '@/theme/cssVariables'
 import { Box, BoxProps, Flex, HStack, Text } from '@chakra-ui/react'

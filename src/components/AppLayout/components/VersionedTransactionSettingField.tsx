@@ -1,6 +1,6 @@
 import { Switch } from '@chakra-ui/react'
 import { TxVersion } from '@raydium-io/raydium-sdk-v2'
-import { useAppStore } from '@/store/useAppStore'
+import { useAppStore } from '@/store/mockAppStore'
 import { SettingField } from './SettingField'
 import { useTranslation } from 'react-i18next'
 

@@ -5,7 +5,8 @@ import { Box, BoxProps, Popover, PopoverArrow, PopoverContent, PopoverProps, Pop
 import { ReactNode, useEffect, useMemo, useRef } from 'react'
 import { useDisclosure } from '../hooks/useDelayDisclosure'
 import { shrinkToValue } from '@/utils/shrinkToValue'
-import { useAppStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 
 export type TooltipHandles = {
   open(): void

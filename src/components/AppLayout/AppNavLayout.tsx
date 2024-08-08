@@ -3,7 +3,8 @@ import RaydiumLogo from '@/icons/RaydiumLogo'
 import RaydiumLogoOutline from '@/icons/RaydiumLogoOutline'
 import ChevronDownIcon from '@/icons/misc/ChevronDownIcon'
 import Gear from '@/icons/misc/Gear'
-import { useAppStore } from '@/store'
+// 
+import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
 import { appLayoutPaddingX } from '@/theme/detailConfig'
 import {
@@ -266,7 +267,7 @@ function SettingsMenuModalContent(props: { isOpen: boolean; triggerRef: React.Re
   const contentRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const triggerPanelGap = 8
-  const isMobile = useAppStore((s) => s.isMobile)
+  // const isMobile = useAppStore((s) => s.isMobile)
   const getTriggerRect = () => props.triggerRef.current?.getBoundingClientRect()
 
   return (
@@ -277,11 +278,12 @@ function SettingsMenuModalContent(props: { isOpen: boolean; triggerRef: React.Re
           transform: (() => {
             const triggerRect = getTriggerRect()
             return (
-              triggerRect
+             /*  triggerRect
                 ? `translate(${isMobile ? 0 : -(window.innerWidth - triggerRect.right)}px, ${
                     triggerRect.bottom + triggerPanelGap
                   }px) !important`
-                : undefined
+                : undefined */
+                undefined
             ) as string | undefined
           })()
         }}

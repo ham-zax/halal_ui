@@ -1,5 +1,6 @@
 import { useEvent } from '@/hooks/useEvent'
-import { supportedExplorers, useAppStore, EXPLORER_KEY } from '@/store'
+import { supportedExplorers, EXPLORER_KEY } from '@/store'
+import { useAppStore } from '@/store/mockAppStore'
 import { Flex, HStack, Image, Text } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 import Button from '../../Button'

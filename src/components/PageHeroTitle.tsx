@@ -2,7 +2,8 @@
  * used in main page hero part
  */
 
-import { useAppStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { heroGridientColorCSSBlock } from '@/theme/cssBlocks'
 import { colors } from '@/theme/cssVariables'
 import { Text, VStack } from '@chakra-ui/react'

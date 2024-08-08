@@ -1,4 +1,4 @@
-import { useAppStore } from '@/store/useAppStore'
+import { useAppStore } from '@/store/mockAppStore'
 import { ReactNode } from 'react'
 
 function ConnectedOnly({ children }: { children: ReactNode }) {

@@ -1,4 +1,5 @@
-import { useAppStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { ReactNode } from 'react'
 
 export default function MobileDesktop(props: {

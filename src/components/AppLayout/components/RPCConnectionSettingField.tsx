@@ -6,7 +6,8 @@ import shallow from 'zustand/shallow'
 import Button from '../../Button'
 import { SettingField } from './SettingField'
 import { SettingFieldToggleButton } from './SettingFieldToggleButton'
-import { useAppStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { useEvent } from '@/hooks/useEvent'
 import { isValidUrl } from '@/utils/url'
 

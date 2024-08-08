@@ -8,7 +8,7 @@ import SelectWalletModal from './SelectWalletModal'
 import ChevronDownIcon from '@/icons/misc/ChevronDownIcon'
 import { colors } from '@/theme/cssVariables'
 import { encodeStr } from '@/utils/common'
-import { useAppStore } from '@/store/useAppStore'
+import { useAppStore } from '@/store/mockAppStore'
 import { useTranslation } from 'react-i18next'
 
 export default function SolWallet() {

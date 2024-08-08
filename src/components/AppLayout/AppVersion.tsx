@@ -1,4 +1,5 @@
-import { useAppStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
 import { toUTC } from '@/utils/date'
 import { Flex, Text } from '@chakra-ui/react'

@@ -3,7 +3,9 @@ import { QuestionToolTip } from '@/components/QuestionToolTip'
 import TokenInput, { DEFAULT_SOL_RESERVER } from '@/components/TokenInput'
 import { useEvent } from '@/hooks/useEvent'
 import { useHover } from '@/hooks/useHover'
-import { useAppStore, useTokenAccountStore, useTokenStore } from '@/store'
+import { useTokenAccountStore, useTokenStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
 import { Box, Button, Collapse, Flex, HStack, SimpleGrid, Text, useDisclosure, CircularProgress } from '@chakra-ui/react'
 import { ApiV3Token, RAYMint, SOL_INFO, TokenInfo } from '@raydium-io/raydium-sdk-v2'
@@ -46,7 +48,7 @@ export function SwapPanel({
   const [defaultInput, defaultOutput] = [urlInputMint || cacheInput, urlOutputMint || cacheOutput]
 
   const { t, i18n } = useTranslation()
-  const { swap: swapDisabled } = useAppStore().featureDisabled
+  const { swap: swapDisabled = false } = useAppStore().featureDisabled
   const swapTokenAct = useSwapStore((s) => s.swapTokenAct)
   const unWrapSolAct = useSwapStore((s) => s.unWrapSolAct)
   const tokenMap = useTokenStore((s) => s.tokenMap)

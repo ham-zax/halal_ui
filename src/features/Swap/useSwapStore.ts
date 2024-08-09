@@ -1,6 +1,8 @@
 import { PublicKey, VersionedTransaction, Transaction } from '@solana/web3.js'
 import { TxVersion, printSimulate, SOL_INFO } from '@raydium-io/raydium-sdk-v2'
-import { createStore, useAppStore, useTokenStore } from '@/store'
+import { createStore, useTokenStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
 import { txStatusSubject, TOAST_DURATION } from '@/hooks/toast/useTxStatus'
 import { ApiSwapV1OutSuccess } from './type'

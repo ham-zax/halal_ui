@@ -1,5 +1,5 @@
 import { useEvent } from '@/hooks/useEvent'
-import { supportedExplorers, EXPLORER_KEY } from '@/store'
+// import { supportedExplorers, EXPLORER_KEY } from '@/store'
 import { useAppStore } from '@/store/mockAppStore'
 import { Flex, HStack, Image, Text } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
@@ -13,12 +13,12 @@ export function DefaultExplorerSettingField() {
   const isMobile = useAppStore((s) => s.isMobile)
   const explorerUrl = useAppStore((s) => s.explorerUrl)
   const handleChange = useEvent((val: string) => {
-    useAppStore.setState({ explorerUrl: val }, false, { type: 'DefaultExplorerSettingField' })
-    setStorageItem(EXPLORER_KEY, val)
+  /*   useAppStore.setState({ explorerUrl: val }, false, { type: 'DefaultExplorerSettingField' })
+    setStorageItem(EXPLORER_KEY, val) */
   })
 
-  const defaultExplorer = supportedExplorers.find((e) => e.host === explorerUrl)
-  const defaultExplorerName = defaultExplorer?.name
+  // const defaultExplorer = supportedExplorers.find((e) => e.host === explorerUrl)
+  // const defaultExplorerName = defaultExplorer?.name
 
   return (
     <SettingField
@@ -31,10 +31,10 @@ export function DefaultExplorerSettingField() {
                 isOpen={isOpen}
                 renderContent={
                   <HStack spacing={1.5}>
-                    <Image src={defaultExplorer?.icon} boxSize="18px" alt={defaultExplorerName} />
+                   {/*  <Image src={defaultExplorer?.icon} boxSize="18px" alt={defaultExplorerName} />
                     <Text fontWeight={500} lineHeight={0}>
                       {defaultExplorerName}
-                    </Text>
+                    </Text> */}
                   </HStack>
                 }
               />
@@ -43,7 +43,7 @@ export function DefaultExplorerSettingField() {
       }
       renderWidgetContent={
         <Flex flexWrap="wrap" gap={4}>
-          {supportedExplorers.map((explorer) => (
+        {/*   {supportedExplorers.map((explorer) => (
             <Button
               key={explorer.name}
               isActive={explorerUrl === explorer.host}
@@ -58,7 +58,7 @@ export function DefaultExplorerSettingField() {
                 </Text>
               </HStack>
             </Button>
-          ))}
+          ))} */}
         </Flex>
       }
     />

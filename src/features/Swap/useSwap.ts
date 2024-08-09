@@ -1,6 +1,6 @@
 import { TxVersion, solToWSol } from '@raydium-io/raydium-sdk-v2'
 import axios from '@/api/axios'
-import { useAppStore } from '@/store'
+import { useAppStore } from '@/store/mockAppStore'
 import { useSwapStore } from './useSwapStore'
 import useSWR from 'swr'
 import shallow from 'zustand/shallow'

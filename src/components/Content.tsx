@@ -10,9 +10,9 @@ import useInitMobileDetector from '@/hooks/app/useInitMobileDetector'
 import useLoadStorageData from '@/hooks/app/useLoadStorageData'
 import AppVersion from './AppVersion'
 
-export default function Content({ children, ...props }: PropsWithChildren) {
+export default function Content({ children}: PropsWithChildren) {
   // data related hooks
-  useInitConnection(props)
+  useInitConnection()
   useTokenAccountInfo()
   useRefreshChainTime()
   useTokenSetting()

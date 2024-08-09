@@ -21,7 +21,7 @@ import { SOLMint } from '@raydium-io/raydium-sdk-v2'
 import { QuestionToolTip } from '@/components/QuestionToolTip'
 import DecimalInput from '@/components/DecimalInput'
 import { colors } from '@/theme/cssVariables'
-import { PriorityLevel, PriorityMode, PRIORITY_LEVEL_KEY, PRIORITY_MODE_KEY } from '@/store/useAppStore'
+import { PriorityLevel, PriorityMode, PRIORITY_LEVEL_KEY, PRIORITY_MODE_KEY } from '@/store/mockAppStore'
 
 import { useAppStore } from '@/store/mockAppStore'
 import useTokenPrice from '@/hooks/token/useTokenPrice'
@@ -44,16 +44,16 @@ export function PriorityModalContent(props: {
   const triggerPanelGap = 24
   const isMobile = useAppStore((s) => s.isMobile)
 
-  const feeConfig = useAppStore((s) => s.feeConfig)
-  const appPriorityLevel = useAppStore((s) => s.priorityLevel)
-  const appPriorityMode = useAppStore((s) => s.priorityMode)
+  const { feeConfig, priorityLevel: appPriorityLevel, priorityMode: appPriorityMode } = useAppStore()
+
 
   const getTriggerRect = () => props.triggerRef.current?.getBoundingClientRect()
   const { currentFee, onChangeFee, onSaveFee, isOpen } = props
   const feeWarn = Number(currentFee) <= (feeConfig[0] ?? 0)
 
-  const [priorityMode, setPriorityMode] = useState(PriorityMode.MaxCap)
-  const [priorityLevel, setPriorityLevel] = useState(PriorityLevel.Turbo)
+  const [priorityMode, setPriorityMode] = useState<PriorityMode>(appPriorityMode || PriorityMode.MaxCap)
+  const [priorityLevel, setPriorityLevel] = useState<PriorityLevel>(appPriorityLevel || PriorityLevel.Turbo)
+
 
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {

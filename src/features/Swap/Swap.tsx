@@ -11,7 +11,9 @@ import SwapChatIcon from '@/icons/misc/SwapChatIcon'
 import SwapExchangeIcon from '@/icons/misc/SwapExchangeIcon'
 import LinkIcon from '@/icons/misc/LinkIcon'
 import DollarIcon from '@/icons/misc/DollarIcon'
-import { useAppStore, useTokenStore } from '@/store'
+import { useTokenStore } from '@/store'
+
+import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
 import { getVHExpression } from '../../theme/cssValue/getViewportExpression'
 import { getSwapPairCache, setSwapPairCache } from './util'
@@ -34,7 +36,7 @@ export default function Swap() {
   const [isMobileChartShown, setIsMobileChartShown] = useState<boolean>(false)
   const [isChartLeft, setIsChartLeft] = useState<boolean>(true)
   const isMobile = useAppStore((s) => s.isMobile)
-  const publicKey = useAppStore((s) => s.publicKey)
+  // const publicKey = useAppStore((s) => s.publicKey)
   const connected = useAppStore((s) => s.connected)
   const [directionReverse, setDirectionReverse] = useState<boolean>(false)
   const [selectedTimeType, setSelectedTimeType] = useState<TimeType>('15m')
@@ -99,10 +101,10 @@ export default function Swap() {
     const _inputMint = inputMint === def ? 'sol' : inputMint
     const _outputMint = outputMint === def ? 'sol' : outputMint
     const href = `https://raydium.io/swap/?inputMint=${_inputMint}&outputMint=${_outputMint}`
-    const walletAddress = publicKey?.toBase58()
+    const walletAddress = 'no address'
     const copyUrl = connected ? href + `&referrer=${walletAddress}` : href
     setValue(copyUrl)
-  }, [inputMint, outputMint, connected, publicKey])
+  }, [inputMint, outputMint, connected])
 
   return (
     <VStack

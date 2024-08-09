@@ -7,7 +7,9 @@ export function useInitConnection() {
     setConnected, 
     setConnecting, 
     setSelectedWallet, 
-    setPublicKey 
+    setPublicKey,
+    setRpcNodeUrl,
+    setWsNodeUrl
   } = useAppStore()
 
   useEffect(() => {
@@ -17,6 +19,10 @@ export function useInitConnection() {
       { adapter: { name: 'Solflare', icon: '/path/to/solflare-icon.png' } },
     ]
     setWallets(mockWallets)
+
+    // Set mock RPC and WS URLs
+    setRpcNodeUrl('https://api.mainnet-beta.solana.com')
+    setWsNodeUrl('wss://api.mainnet-beta.solana.com')
 
     // Simulate auto-connection (if needed)
     const autoConnect = async () => {
@@ -30,5 +36,7 @@ export function useInitConnection() {
     }
 
     autoConnect()
-  }, [setWallets, setConnected, setConnecting, setSelectedWallet, setPublicKey])
+  }, [setWallets, setConnected, setConnecting, setSelectedWallet, setPublicKey, setRpcNodeUrl, setWsNodeUrl])
 }
+
+export default useInitConnection

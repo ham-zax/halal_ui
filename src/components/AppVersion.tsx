@@ -1,4 +1,4 @@
-import { PRIORITY_LEVEL_KEY, PRIORITY_MODE_KEY, PriorityLevel, PriorityMode } from '@/store/useAppStore'
+import { PRIORITY_LEVEL_KEY, PRIORITY_MODE_KEY, PriorityLevel, PriorityMode } from '@/store/mockAppStore'
 
 import { useAppStore } from '@/store/mockAppStore'
 import { useCallback, useEffect } from 'react'
@@ -8,28 +8,28 @@ import { getStorageItem } from '@/utils/localStorage'
 
 export default function AppVersion() {
   const { t } = useTranslation()
-  const [checkAppVersionAct, needRefresh] = useAppStore((s) => [s.checkAppVersionAct, s.needRefresh])
+  // const [checkAppVersionAct, needRefresh] = useAppStore((s) => [s.checkAppVersionAct, s.needRefresh])
 
   const onClose = useCallback(() => {
     useAppStore.setState({ needRefresh: false })
   }, [])
 
   useEffect(() => {
-    useAppStore.setState({
+   /*  useAppStore.setState({
       priorityLevel: getStorageItem(PRIORITY_LEVEL_KEY) ? Number(getStorageItem(PRIORITY_LEVEL_KEY)) : PriorityLevel.Turbo,
       priorityMode: getStorageItem(PRIORITY_MODE_KEY) ? Number(getStorageItem(PRIORITY_MODE_KEY)) : PriorityMode.MaxCap
-    })
+    }) */
 
-    const interval = window.setInterval(() => {
-      checkAppVersionAct()
-    }, 60 * 1000 * 2)
-    checkAppVersionAct()
-    useAppStore.getState().fetchPriorityFeeAct()
-    return () => window.clearInterval(interval)
-  }, [checkAppVersionAct])
+  /*   const interval = window.setInterval(() => {
+      // checkAppVersionAct()
+    }, 60 * 1000 * 2) */
+    // checkAppVersionAct()
+    // useAppStore.getState().fetchPriorityFeeAct()
+    // return () => window.clearInterval(interval)
+  }, [])
 
   return (
-    <Modal isOpen={needRefresh} onClose={onClose}>
+    <Modal isOpen={false} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>{t('common.app_version_available')}</ModalHeader>

@@ -1,7 +1,9 @@
 import axios from '@/api/axios'
 import { isValidPublicKey } from '@/utils/publicKey'
 import { MINUTE_MILLISECONDS } from '@/utils/date'
-import { useTokenStore, TokenPrice, useAppStore } from '@/store'
+import { useTokenStore, TokenPrice } from '@/store'
+import { useAppStore } from '@/store/mockAppStore'
+
 import { solToWSol, WSOLMint, RAYMint, USDCMint, USDTMint, mSOLMint } from '@raydium-io/raydium-sdk-v2'
 import { NATIVE_MINT } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
@@ -13,9 +15,7 @@ export type { TokenPrice }
 const fetcher = (url: string) => {
   return axios.get<{
     [key: string]: number
-  }>(url, {
-    skipError: true
-  })
+  }>(url)
 }
 
 const prepareFetchList = new Set<string>([

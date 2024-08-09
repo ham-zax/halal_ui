@@ -7,9 +7,11 @@ export enum PriorityLevel {
   Ultra
 }
 
+export const PRIORITY_LEVEL_KEY = '_r_fee_level_'
+export const PRIORITY_MODE_KEY = '_r_fee_mode_'
 export enum PriorityMode {
-  MaxCap,
-  Exact
+  MaxCap = 'MaxCap',
+  Exact = 'Exact'
 }
 
 export enum TxVersion {
@@ -23,6 +25,13 @@ interface Wallet {
   };
 }
 interface MockAppState {
+  featureDisabled: {  swap?: boolean; };
+  urlConfigs: {
+    BASE_HOST: string;
+    MINT_PRICE: string;
+    // ... any other URL configs ...
+  };
+  checkAppVersionAct: any;
   isMobile: boolean
   isLaptop: boolean
   aprMode: 'M' | 'D'
@@ -38,7 +47,10 @@ interface MockAppState {
     jup: boolean
     userAdded: boolean
   }
-
+  rpcNodeUrl: string | null;
+  wsNodeUrl: string | null;
+  setRpcNodeUrl: (url: string | null) => void;
+  setWsNodeUrl: (url: string | null) => void;
   txVersion: TxVersion
   appVersion: string
   needRefresh: boolean
@@ -71,7 +83,11 @@ const initialState: MockAppState = {
   isLaptop: false,
   aprMode: 'M',
   connected: false,
-
+  featureDisabled: {
+    swap: false, // or true if you want it disabled by default
+  },
+  rpcNodeUrl: null,
+  wsNodeUrl: null,
   explorerUrl: 'https://explorer.solana.com',
 
   displayTokenSettings: {
@@ -130,7 +146,18 @@ const initialState: MockAppState = {
   },
   disconnect: function (): void {
     throw new Error('Function not implemented.');
-  }
+  },
+  setRpcNodeUrl: function (url: string | null): void {
+    throw new Error('Function not implemented.');
+  },
+  setWsNodeUrl: function (url: string | null): void {
+    throw new Error('Function not implemented.');
+  },
+  urlConfigs: {
+    BASE_HOST: '',
+    MINT_PRICE: ''
+  },
+  checkAppVersionAct: undefined
 }
 
 export const useMockAppStore = create<MockAppState>((set, get) => ({
@@ -144,16 +171,14 @@ export const useMockAppStore = create<MockAppState>((set, get) => ({
   },
 
   setAprMode: (mode) => set({ aprMode: mode }),
-
+  setRpcNodeUrl: (url) => set({ rpcNodeUrl: url }),
+  setWsNodeUrl: (url) => set({ wsNodeUrl: url }),
   setWallets: (wallets) => set({ wallets }),
   setSelectedWallet: (wallet) => set({ selectedWallet: wallet }),
   setConnected: (connected) => set({ connected }),
   setConnecting: (connecting) => set({ connecting }),
   setVisible: (visible) => set({ visible }),
   setPublicKey: (publicKey) => set({ publicKey }),
-  setDisplayTokenSettings: (settings) => set((state) => ({
-    displayTokenSettings: { ...state.displayTokenSettings, ...settings }
-  })),
 
   select: (walletName) => {
     const { wallets } = get();

@@ -2,7 +2,6 @@ import CircleCheck from '@/icons/misc/CircleCheck'
 import CopyIcon from '@/icons/misc/CopyIcon'
 import ExternalLink from '@/icons/misc/ExternalLink'
 import { SvgIcon } from '@/icons/type'
-import { supportedExplorers } from '@/store/useAppStore'
 import { useAppStore } from '@/store/mockAppStore'
 import { Box, Flex, FlexProps, Text, TextProps, useClipboard } from '@chakra-ui/react'
 import { ReactNode } from 'react'
@@ -75,7 +74,7 @@ export default function AddressChip({
             {hasCopied ? <CircleCheck color={'currentColor'} {...iconProps} /> : <CopyIcon color={'currentColor'} {...iconProps} />}
           </Box>
         )}
-        {canExternalLink && address && (
+        {/* {canExternalLink && address && (
           <a
             href={explorerUrl === supportedExplorers[0]?.host ? `${explorerUrl}/token/${address}` : `${explorerUrl}/address/${address}`}
             rel="noreferrer"
@@ -85,7 +84,7 @@ export default function AddressChip({
               <ExternalLink color={'currentColor'} {...iconProps} />
             </Box>
           </a>
-        )}
+        )} */}
       </Flex>
     </Flex>
   )

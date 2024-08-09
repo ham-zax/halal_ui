@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import { useDisclosure } from '@/hooks/useDelayDisclosure'
 import { Flex, Button, Text } from '@chakra-ui/react'
 import { colors } from '@/theme/cssVariables'
-import { FEE_KEY, PriorityLevel, PriorityMode } from '@/store/useAppStore'
+import { PriorityLevel, PriorityMode } from '@/store/mockAppStore'
 import { useAppStore } from '@/store/mockAppStore'
 import { useEvent } from '@/hooks/useEvent'
 import { setStorageItem } from '@/utils/localStorage'
@@ -28,7 +28,7 @@ export function PriorityButton() {
     setCurrentFee(val)
   })
   const handleSaveFee = useEvent(() => {
-    setStorageItem(FEE_KEY, currentFee === undefined ? '' : String(currentFee))
+    // setStorageItem('')
     useAppStore.setState({ transactionFee: currentFee })
     onClose()
   })

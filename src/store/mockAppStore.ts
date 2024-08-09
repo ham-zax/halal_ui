@@ -25,6 +25,7 @@ interface Wallet {
   };
 }
 interface MockAppState {
+  chainTimeOffset: any;
   featureDisabled: {  swap?: boolean; };
   urlConfigs: {
     BASE_HOST: string;

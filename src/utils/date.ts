@@ -21,6 +21,7 @@ export function toUTC(
 }
 
 export function parseDateInfo(timestamp?: TimeStamp) {
+  console.log('timestamp', timestamp)
   const utcString = (timestamp ? new Date(Number(timestamp)) : new Date()).toISOString() // '2021-09-09T10:32:32.498Z'
   const matchInfo = utcString.match(/^([\d-]+)T(\d+):(\d+):(\d+)/)
   const [, date, hour, minutes, seconds] = matchInfo ?? []

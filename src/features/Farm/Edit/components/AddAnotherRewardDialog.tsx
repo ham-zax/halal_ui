@@ -2,7 +2,9 @@ import Button from '@/components/Button'
 import DatePickerModal from '@/components/FarmDatePickerModal'
 import TokenInput from '@/components/TokenInput'
 import { useEvent } from '@/hooks/useEvent'
-import { useAppStore, useTokenAccountStore, useTokenStore } from '@/store'
+import { useTokenAccountStore, useTokenStore } from '@/store'
+import { useAppStore } from '@/store/mockAppStore'
+
 import { colors } from '@/theme/cssVariables'
 import { parseDateInfo } from '@/utils/date'
 import {

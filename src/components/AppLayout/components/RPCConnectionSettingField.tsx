@@ -13,38 +13,35 @@ import { isValidUrl } from '@/utils/url'
 
 export function RPCConnectionSettingField() {
   const { t } = useTranslation()
-  const [isMobile, rpcs, rpcNodeUrl, setRpcUrlAct] = useAppStore((s) => [s.isMobile, s.rpcs, s.rpcNodeUrl, s.setRpcUrlAct], shallow)
-  const isCurrentCustom = !rpcs.some((rpc) => rpc.url === rpcNodeUrl) && !!rpcNodeUrl
+/*   const [isMobile, rpcs, rpcNodeUrl, setRpcUrlAct] = useAppStore((s) => [s.isMobile, s.rpcs, s.rpcNodeUrl, s.setRpcUrlAct], shallow) */
+/*   const isCurrentCustom = !rpcs.some((rpc) => rpc.url === rpcNodeUrl) && !!rpcNodeUrl
   const [customUrl, setCustomUrl] = useState(isCurrentCustom ? rpcNodeUrl || 'https://' : 'https://')
   const { isOpen: isCustom, onOpen: onCustom, onClose: offCustom } = useDisclosure()
   const { isOpen: isLoading, onOpen: onLoading, onClose: offLoading } = useDisclosure()
-  const defaultRpc = rpcs.find((rpc) => rpc.url === rpcNodeUrl)
+  const defaultRpc = rpcs.find((rpc) => rpc.url === rpcNodeUrl) */
 
-  const handleSwitchCustomRpc = useEvent(async () => {
+/*   const handleSwitchCustomRpc = useEvent(async () => {
     if (!isValidUrl(customUrl)) return
     onLoading()
     await setRpcUrlAct(customUrl)
     offLoading()
-  })
+  }) */
 
-  useEffect(() => {
+/*   useEffect(() => {
     if (isCurrentCustom) {
       onCustom()
       setCustomUrl(rpcNodeUrl)
     }
-  }, [isCurrentCustom])
+  }, [isCurrentCustom]) */
 
   return (
     <SettingField
       fieldName={t('setting_board.rpc_connection')}
       tooltip={t('setting_board.rpc_connection_tooltip')}
-      renderToggleButton={
-        isMobile ? (isOpen) => <SettingFieldToggleButton isOpen={isOpen} renderContent={defaultRpc ? defaultRpc.name : rpcNodeUrl} /> : null
-      }
       renderWidgetContent={
         <>
           <Flex flexWrap="wrap" gap={4}>
-            {rpcs.map((rpc) => (
+  {/*           {rpcs.map((rpc) => (
               <Button
                 key={rpc.name}
                 isActive={rpcNodeUrl === rpc.url && !isCustom}
@@ -67,11 +64,11 @@ export function RPCConnectionSettingField() {
                 onCustom()
                 handleSwitchCustomRpc()
               }}
-            >
+            > */}
               <Flex gap={1.5}>{t('setting_board.custom')}</Flex>
-            </Button>
+            {/* </Button> */}
           </Flex>
-          <InputGroup mt={4}>
+         {/*  <InputGroup mt={4}>
             <Input
               flexGrow={1}
               width="full"
@@ -99,7 +96,7 @@ export function RPCConnectionSettingField() {
                 <Spinner size="sm" />
               </InputRightElement>
             ) : null}
-          </InputGroup>
+          </InputGroup> */}
         </>
       }
     />

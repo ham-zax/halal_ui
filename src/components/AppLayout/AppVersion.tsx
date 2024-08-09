@@ -11,7 +11,7 @@ function AppVersion() {
   const [time, setTime] = useState('')
 
   useEffect(() => {
-    setTime(toUTC(new Date(Date.now() + chainTimeOffset)))
+    // setTime(toUTC(new Date(Date.now() + chainTimeOffset)))
   }, [chainTimeOffset])
 
   return (

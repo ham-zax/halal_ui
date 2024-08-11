@@ -19,7 +19,7 @@ import {
 import { formatLocaleStr } from '@/utils/numberish/formatter'
 import { trimTailingZero } from '@/utils/numberish/formatNumber'
 import createStore from './createStore'
-import { useAppStore } from './useAppStore'
+import { useAppStore } from './mockAppStore'
 import { useTokenStore } from './useTokenStore'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
 import { txStatusSubject } from '@/hooks/toast/useTxStatus'

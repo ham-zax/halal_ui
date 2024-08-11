@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import { FormatFarmInfoOut, FetchPoolParams } from '@raydium-io/raydium-sdk-v2'
 import useSWR from 'swr'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import axios from '@/api/axios'
 
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 
 import { useAppStore } from '@/store/mockAppStore'
 import { useTokenAccountStore } from '@/store/useTokenAccountStore'

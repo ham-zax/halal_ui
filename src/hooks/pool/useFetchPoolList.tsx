@@ -3,7 +3,7 @@ import useSWRInfinite from 'swr/infinite'
 import { KeyedMutator } from 'swr'
 import { AxiosResponse } from 'axios'
 import axios from '@/api/axios'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import { PoolsApiReturn, ApiV3PoolInfoItem, PoolFetchType } from '@raydium-io/raydium-sdk-v2'
 
 import { useAppStore } from '@/store/mockAppStore'

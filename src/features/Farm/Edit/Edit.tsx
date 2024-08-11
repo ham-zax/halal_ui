@@ -4,7 +4,7 @@ import { Box, Flex, Grid, GridItem, HStack, Heading, Link, Skeleton, Text, VStac
 import { ApiV3PoolInfoConcentratedItem, FormatFarmInfoOutV6, TokenInfo, solToWSol, solToWSolToken } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 import { useRouter } from 'next/router'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 
 import Button from '@/components/Button'
 import useFetchFarmInfoById from '@/hooks/farm/useFetchFarmInfoById'

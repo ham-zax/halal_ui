@@ -12,7 +12,7 @@ import { ApiV3Token, RAYMint, SOL_INFO, TokenInfo } from '@raydium-io/raydium-sd
 import { PublicKey } from '@solana/web3.js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import CircleInfo from '@/icons/misc/CircleInfo'
 import { getSwapPairCache, setSwapPairCache } from '../util'
 import { urlToMint, mintToUrl, isSolWSol, getMintPriority } from '@/utils/token'

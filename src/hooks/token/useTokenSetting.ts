@@ -1,7 +1,7 @@
 import { useTokenStore } from '@/store'
 import { useAppStore } from '@/store/mockAppStore'
 import { useEffect } from 'react'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 
 export default function useTokenSetting() {
   const displayTokenSettings = useAppStore((s) => s.displayTokenSettings)

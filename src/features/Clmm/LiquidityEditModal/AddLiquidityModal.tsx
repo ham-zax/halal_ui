@@ -16,14 +16,14 @@ import {
   HStack
 } from '@chakra-ui/react'
 import { solToWSol } from '@raydium-io/raydium-sdk-v2'
-import shallow from 'zustand/shallow'
-
+import { shallow } from 'zustand/shallow'
 import { FormattedPoolInfoConcentratedItem } from '@/hooks/pool/type'
 import TokenAvatarPair from '@/components/TokenAvatarPair'
 import { debounce } from '@/utils/functionMethods'
 import { formatCurrency, formatToRawLocaleStr } from '@/utils/numberish/formatter'
 import useClmmBalance, { ClmmPosition } from '@/hooks/portfolio/clmm/useClmmBalance'
-import { useAppStore, useClmmStore, useTokenAccountStore } from '@/store'
+import { useClmmStore, useTokenAccountStore } from '@/store'
+import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
 import Button from '@/components/Button'
 import { wSolToSol } from '@/utils/token'

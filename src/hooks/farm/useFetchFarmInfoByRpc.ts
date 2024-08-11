@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import useSWR from 'swr'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import { splAccountLayout } from '@raydium-io/raydium-sdk-v2'
 import { Connection, PublicKey } from '@solana/web3.js'
 

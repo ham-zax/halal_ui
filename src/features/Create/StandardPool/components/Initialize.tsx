@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState, useRef, useMemo } from 'react'
 import { Box, Flex, HStack, Text, VStack, useDisclosure, Skeleton } from '@chakra-ui/react'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import FocusTrap from 'focus-trap-react'
 import { usePopper } from 'react-popper'
 import { useTranslation } from 'react-i18next'

@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from 'react'
 import { FarmPositionData } from '@raydium-io/raydium-sdk-v2'
 import useSWR from 'swr'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import axios from '@/api/axios'
 import { useTokenAccountStore, useFarmStore } from '@/store'
 import { useAppStore } from '@/store/mockAppStore'

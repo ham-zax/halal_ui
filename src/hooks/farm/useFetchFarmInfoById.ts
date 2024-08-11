@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import useSWR, { KeyedMutator } from 'swr'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import axios from '@/api/axios'
 import { AxiosResponse } from 'axios'
 import { FormatFarmInfoOut } from '@raydium-io/raydium-sdk-v2'

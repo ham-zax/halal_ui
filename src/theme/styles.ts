@@ -1,4 +1,9 @@
 export const styles = {
+  global: {
+    '@tailwind base': {},
+    '@tailwind components': {},
+    '@tailwind utilities': {}
+  }
   // global: {
   //   'html,body,#__next,#app-layout': {
   //     height: '100%'

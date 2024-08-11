@@ -7,6 +7,7 @@ import { useRouter } from 'next/router'
 import { useMemo } from 'react'
 import Decimal from 'decimal.js'
 import { isLocal } from '../utils/common'
+import '@/theme/globals.css'
 
 import i18n from '../i18n'
 import { isClient } from '../utils/common'

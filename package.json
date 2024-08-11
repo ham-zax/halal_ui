@@ -40,6 +40,7 @@
     "@types/react-datepicker": "^4.8.0",
     "@types/uuid": "^9.0.6",
     "axios": "^1.7.3",
+    "bigint-buffer": "^1.1.5",
     "bn.js": "^5.2.1",
     "cookies-next": "^4.2.1",
     "d3": "^7.9.0",
@@ -67,13 +68,14 @@
     "@types/node-fetch": "^2.6.2",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "eslint-plugin-react": "^7.31.7",
-    "postcss": "^8",
+    "postcss": "^8.4.41",
     "prettier": "^2.7.1",
     "shx": "^0.3.4",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.9",
     "typescript": "^5"
   }
 }

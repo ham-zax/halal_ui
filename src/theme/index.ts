@@ -27,6 +27,7 @@ import { Text } from './components/Text'
 import { Tooltip } from './components/Tooltip'
 import { breakpoints } from './foundations/breakpoints'
 import { radii } from './foundations/radii'
+import { styles } from './styles'
 
 const config: ThemeConfig = {
   initialColorMode: 'dark',
@@ -36,7 +37,7 @@ const config: ThemeConfig = {
 export const theme = extendTheme({
   // colors: lightTheme.colors,
   config,
-  // styles,
+  styles,
   radii,
   breakpoints,
 

@@ -2,15 +2,44 @@
   "name": "halal_ui",
   "version": "0.1.0",
   "private": true,
+  "description": "Halal UI",  
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "public",
+    "src",
+    ".editorconfig",
+    ".eslintrc.json",
+    ".gitignore",
+    ".prettierignore",
+    ".prettierrc",
+    "LICENSE",
+    "next.config.js",
+    "next-env.d.ts",
+    "package.json",
+    "README.md",
+    "tsconfig.json"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "prepare": "husky install",
+    "clean": "shx rm -rf .next .swc lib",
+    "dev": "next dev --port 3002",
+    "build": "next build && next export",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --pretty --noEmit"
   },
   "dependencies": {
+    "@types/big.js": "^6.1.6",
+    "@types/bn.js": "^5.1.1",
+    "@types/d3": "^7.4.0",
+    "@types/numeral": "^2.0.5",
+    "@types/react-datepicker": "^4.8.0",
+    "@types/uuid": "^9.0.6",
     "@chakra-ui/react": "^2.8.2",
     "@raydium-io/raydium-sdk-v2": "^0.1.55-alpha",
+    "axios": "^1.7.3",
     "bn.js": "^5.2.1",
     "cookies-next": "^4.2.1",
     "d3": "^7.9.0",
@@ -30,16 +59,19 @@
     "rxjs": "^7.8.1",
     "swr": "^2.2.5",
     "yup": "^1.4.0",
-    "zustand": "^4.5.4"
+    "zustand": "^4.1.1"
   },
   "devDependencies": {
-    "@types/bn.js": "^5.1.5",
     "@types/node": "^20",
+    "@types/node-fetch": "^2.6.2",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
+    "eslint-plugin-react": "^7.31.7",
     "postcss": "^8",
+    "prettier": "^2.7.1",
+    "shx": "^0.3.4",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

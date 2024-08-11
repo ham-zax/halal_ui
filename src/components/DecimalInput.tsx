@@ -104,7 +104,7 @@ function DecimalInput(props: Props) {
       // }
       // return val === '.' ? '0.' : val
     },
-    [decimals]
+    []
   )
 
   const handleFocus = useCallback(() => {

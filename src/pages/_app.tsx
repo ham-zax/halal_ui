@@ -8,13 +8,15 @@ import { useMemo } from 'react'
 import Decimal from 'decimal.js'
 import { isLocal } from '../utils/common'
 import '@/theme/globals.css'
-
+import { createThirdwebClient } from "thirdweb";
 import i18n from '../i18n'
 import { isClient } from '../utils/common'
 import '@/components/Toast/toast.css'
 import '@/components/LandingPage/components/tvl.css'
 import '@/components/LandingPage/liquidity.css'
 import 'react-day-picker/dist/style.css'
+import { ThirdwebProvider } from "thirdweb/react";
+
 // import { GoogleAnalytics } from '@next/third-parties/google'
 
 const DynamicProviders = dynamic(() => import('@/provider').then((mod) => mod.Providers))
@@ -39,6 +41,7 @@ const MyApp = ({ Component, pageProps, lng, ...props }: AppProps & { lng: string
   //   i18n.changeLanguage(lang)
   // }
 
+
   return (
     <>
       <Head>
@@ -59,6 +62,8 @@ const MyApp = ({ Component, pageProps, lng, ...props }: AppProps & { lng: string
         <meta property="og:title" content="Swap | Raydium" />
         <title>{pageProps?.title ? `${pageProps.title} Raydium` : 'Raydium'}</title>
       </Head>
+      
+      <ThirdwebProvider>
       <DynamicProviders>
         <DynamicContent {...props}>
           {onlyContent ? (
@@ -69,7 +74,8 @@ const MyApp = ({ Component, pageProps, lng, ...props }: AppProps & { lng: string
             </DynamicAppNavLayout>
           )}
         </DynamicContent>
-      </DynamicProviders>
+        </DynamicProviders>
+        </ThirdwebProvider>
     </>
   )
 }
@@ -89,3 +95,13 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
 }
 
 export default MyApp
+
+const clientId = '29f19124888f01d6e964aee5a0d211f1';
+
+const client = createThirdwebClient({ clientId: '29f19124888f01d6e964aee5a0d211f1' });
+
+if (!clientId) {
+  throw new Error("No client ID provided");
+}
+
+export { client };

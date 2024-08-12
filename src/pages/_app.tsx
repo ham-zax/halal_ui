@@ -16,6 +16,7 @@ import '@/components/LandingPage/components/tvl.css'
 import '@/components/LandingPage/liquidity.css'
 import 'react-day-picker/dist/style.css'
 import { ThirdwebProvider } from "thirdweb/react";
+import { createWallet, inAppWallet, walletConnect } from 'thirdweb/wallets'
 
 // import { GoogleAnalytics } from '@next/third-parties/google'
 
@@ -105,3 +106,21 @@ if (!clientId) {
 }
 
 export { client };
+const wallets = [
+  createWallet("io.metamask"),
+  createWallet("com.coinbase.wallet"),
+  walletConnect(),
+  inAppWallet({
+    auth: {
+      options: [
+        "email",
+        "google",
+        "apple",
+        "facebook",
+        "phone",
+      ],
+    },
+  }),
+];
+
+export { wallets };

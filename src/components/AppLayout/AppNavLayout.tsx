@@ -41,6 +41,8 @@ import { PriorityButton } from './components/PriorityButton'
 import DisclaimerModal from './components/DisclaimerModal'
 import { keyframes } from '@emotion/react'
 import AppVersion from './AppVersion'
+import { ConnectButton, lightTheme } from 'thirdweb/react'
+import { client, wallets } from '@/pages/_app'
 
 export interface NavSettings {
   // colorTheme: 'dark' | 'light'
@@ -129,15 +131,13 @@ function AppNavLayout({
             <Text fontSize="xl" fontWeight="medium" color={colors.textSecondary}>
               {pathname === '/swap'
                 ? t('swap.title')
-                : pathname === '/liquidity-pools'
-                ? t('liquidity.title')
                 : pathname === '/portfolio'
-                ? t('portfolio.title')
-                : pathname === '/playground'
-                ? t('common.playground')
-                : pathname === '/staking'
-                ? t('staking.title')
-                : ''}
+                  ? t('portfolio.title')
+                  : pathname === '/playground'
+                    ? t('common.playground')
+                    : pathname === '/staking'
+                      ? t('staking.title')
+                      : ''}
             </Text>
           </HStack>
         </Mobile>
@@ -147,9 +147,6 @@ function AppNavLayout({
           <HStack flexGrow={1} justify="start" overflow={['auto', 'visible']} gap={15}>
             <RouteLink href="/swap" isActive={pathname === '/swap'}>
               {t('swap.title')}
-            </RouteLink>
-            <RouteLink href="/liquidity-pools" isActive={pathname.includes('/liquidity')}>
-              {t('liquidity.title')}
             </RouteLink>
             <RouteLink href="/portfolio" isActive={pathname === '/portfolio'}>
               {t('portfolio.title')}
@@ -175,6 +172,17 @@ function AppNavLayout({
           <SettingsMenu />
           {/* <EVMWallet />  don't need currently yet*/}
           {/* <SolWallet /> */}
+          <ConnectButton
+            client={client}
+            wallets={wallets}
+            theme={lightTheme({
+              colors: { primaryButtonBg: "#5f63f4" },
+            })}
+            connectModal={{
+              size: "wide",
+              showThirdwebBranding: false,
+            }}
+          />
         </Flex>
       </HStack>
 
@@ -278,12 +286,12 @@ function SettingsMenuModalContent(props: { isOpen: boolean; triggerRef: React.Re
           transform: (() => {
             const triggerRect = getTriggerRect()
             return (
-             /*  triggerRect
-                ? `translate(${isMobile ? 0 : -(window.innerWidth - triggerRect.right)}px, ${
-                    triggerRect.bottom + triggerPanelGap
-                  }px) !important`
-                : undefined */
-                undefined
+              /*  triggerRect
+                 ? `translate(${isMobile ? 0 : -(window.innerWidth - triggerRect.right)}px, ${
+                     triggerRect.bottom + triggerPanelGap
+                   }px) !important`
+                 : undefined */
+              undefined
             ) as string | undefined
           })()
         }}

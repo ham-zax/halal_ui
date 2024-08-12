@@ -27,6 +27,10 @@ import { getMintPriority } from '@/utils/token'
 import Tooltip from '@/components/Tooltip'
 // import { MoonpayBuy } from '@/components/Moonpay'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
+import PriceView from '@/components/0x/price'
+import QuoteView from '@/components/0x/quote'
+import { PriceResponse } from '@/utils/0x/types'
+import { useAccount, useChainId } from "wagmi";
 
 export default function Swap() {
   // const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
@@ -105,7 +109,14 @@ export default function Swap() {
     const copyUrl = connected ? href + `&referrer=${walletAddress}` : href
     setValue(copyUrl)
   }, [inputMint, outputMint, connected])
+  const { address } = useAccount();
 
+  const chainId = useChainId() || 1;
+  console.log("chainId: ", chainId);
+
+  const [finalize, setFinalize] = useState(false);
+  const [price, setPrice] = useState<PriceResponse | undefined>();
+  const [quote, setQuote] = useState();
   return (
     <VStack
       mx={['unset', 'auto']}
@@ -181,6 +192,27 @@ export default function Swap() {
         gap={[3, isPCChartShown ? 4 : 0]}
       >
         <GridItem ref={swapPanelRef} gridArea="panel">
+        <div
+      className={`flex min-h-screen flex-col items-center justify-between p-24`}
+    >
+      {finalize && price ? (
+        <QuoteView
+          taker={address}
+          price={price}
+          quote={quote}
+          setQuote={setQuote}
+          chainId={chainId}
+        />
+      ) : (
+        <PriceView
+          taker={address}
+          price={price}
+          setPrice={setPrice}
+          setFinalize={setFinalize}
+          chainId={chainId}
+        />
+      )}
+    </div>
           <PanelCard p={[3, 6]} flexGrow={['1', 'unset']}>
             <SwapPanel
               onInputMintChange={setInputMint}

@@ -1,28 +1,52 @@
-import { type NextRequest } from "next/server";
+// src/app/api/price/route.ts
+import { TOKENS } from '@/features/Swap/tokens';
+import { NextRequest, NextResponse } from 'next/server';
+
+function qs(obj: any) {
+    return Object.keys(obj)
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`)
+        .join('&');
+}
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
+    console.log('API route hit');
+    const { searchParams } = new URL(request.url);
+    const fromToken = searchParams.get('fromToken');
+    const toToken = searchParams.get('toToken');
+    const amount = searchParams.get('amount');
 
-  try {
-    const res = await fetch(
-      `https://api.0x.org/swap/permit2/price?${searchParams}`,
-      {
-        headers: {
-          "0x-api-key": process.env.NEXT_PUBLIC_ZEROEX_API_KEY as string,
-        },
-      }
-    );
-    const data = await res.json();
+    console.log('Received params:', { fromToken, toToken, amount });
 
-    console.log(
-      "price api",
-      `https://api.0x.org/swap/permit2/price?${searchParams}`
-    );
+    if (!fromToken || !toToken || !amount) {
+        console.log('Missing parameters');
+        return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+    }
 
-    console.log("price data", data);
+    const fromTokenObj = TOKENS.find(token => token.address === fromToken);
+    const toTokenObj = TOKENS.find(token => token.address === toToken);
 
-    return Response.json(data);
-  } catch (error) {
-    console.log(error);
-  }
+    if (!fromTokenObj || !toTokenObj) {
+        console.log('Invalid token');
+        return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
+    }
+
+    const params = {
+        sellToken: fromTokenObj.address,
+        buyToken: toTokenObj.address,
+        sellAmount: amount,
+    };
+
+    const headers = { '0x-api-key': process.env.OX_API_KEY || '' };
+    
+    try {
+        console.log('Fetching from 0x API with params:', params);
+        const response = await fetch(`https://sepolia.api.0x.org/swap/v1/price?${qs(params)}`, { headers });
+        console.log('0x API response status:', response.status);
+        const swapPriceJSON = await response.json();
+        console.log('0x API response:', swapPriceJSON);
+        return NextResponse.json(swapPriceJSON);
+    } catch (error) {
+        console.error('Error fetching price:', error);
+        return NextResponse.json({ error: 'Failed to fetch price' }, { status: 500 });
+    }
 }

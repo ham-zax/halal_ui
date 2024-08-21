@@ -42,7 +42,7 @@ import DisclaimerModal from './components/DisclaimerModal'
 import { keyframes } from '@emotion/react'
 import AppVersion from './AppVersion'
 import { ConnectButton, lightTheme } from 'thirdweb/react'
-import { client, wallets } from '@/pages/_app'
+import { client, wallets } from '@/utils/thirdweb/client'
 
 export interface NavSettings {
   // colorTheme: 'dark' | 'light'

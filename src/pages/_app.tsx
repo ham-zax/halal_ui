@@ -64,7 +64,7 @@ const MyApp = ({ Component, pageProps, lng, ...props }: AppProps & { lng: string
         <title>{pageProps?.title ? `${pageProps.title} Raydium` : 'Raydium'}</title>
       </Head>
       
-      <ThirdwebProvider>
+      <ThirdwebProvider >
       <DynamicProviders>
         <DynamicContent {...props}>
           {onlyContent ? (
@@ -96,31 +96,3 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
 }
 
 export default MyApp
-
-const clientId = '29f19124888f01d6e964aee5a0d211f1';
-
-const client = createThirdwebClient({ clientId: '29f19124888f01d6e964aee5a0d211f1' });
-
-if (!clientId) {
-  throw new Error("No client ID provided");
-}
-
-export { client };
-const wallets = [
-  createWallet("io.metamask"),
-  createWallet("com.coinbase.wallet"),
-  walletConnect(),
-  inAppWallet({
-    auth: {
-      options: [
-        "email",
-        "google",
-        "apple",
-        "facebook",
-        "phone",
-      ],
-    },
-  }),
-];
-
-export { wallets };

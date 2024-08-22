@@ -1,6 +1,9 @@
 import { create, Mutate, StoreApi } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { enableMapSet } from 'immer'
+
+enableMapSet()
 
 const storeResetter: {
   name?: string

@@ -6,12 +6,15 @@ import { useAppStore } from './mockAppStore'
 import { getStorageItem, setStorageItem } from '@/utils/localStorage'
 import logMessage from '@/utils/log'
 export const EXTRA_TOKEN_KEY = '_r_cus_t_'
+import { fetchJupiterTokens } from '../api/token/tokenApi'
 
 export interface TokenPrice {
   value: number
 }
 
 export interface TokenStore {
+  jupiterTokens: TokenInfo[]
+  loadJupiterTokens: () => Promise<void>
   tokenList: TokenInfo[]
   displayTokenList: TokenInfo[]
   tokenMap: Map<string, TokenInfo>
@@ -37,6 +40,7 @@ export interface TokenStore {
 }
 
 const initTokenSate = {
+  jupiterTokens: [],
   tokenList: [],
   displayTokenList: [],
   extraLoadedTokenList: [],
@@ -86,6 +90,46 @@ export const getStorageToken = (mint: string): TokenInfo | undefined => {
 export const useTokenStore = createStore<TokenStore>(
   (set, get) => ({
     ...initTokenSate,
+    jupiterTokens: [],
+    loadJupiterTokens: async () => {
+      try {
+        const tokens = await fetchJupiterTokens()
+        set((state) => {
+          // Update jupiterTokens
+          state.jupiterTokens = tokens
+    
+          // Merge with existing tokens, avoiding duplicates
+          const existingAddresses = new Set(state.tokenList.map(t => t.address))
+          const newTokens = tokens.filter(t => !existingAddresses.has(t.address))
+          state.tokenList = [...state.tokenList, ...newTokens]
+    
+          // Update tokenMap
+          const newTokenMap = new Map(state.tokenMap)
+          newTokens.forEach(token => {
+            newTokenMap.set(token.address, token)
+          })
+          state.tokenMap = newTokenMap
+    
+          // Update displayTokenList
+          // This assumes you want to display all Jupiter tokens. Adjust the filter if needed.
+          state.displayTokenList = [
+            ...state.displayTokenList,
+            ...newTokens.filter(token => 
+              !state.displayTokenList.some(t => t.address === token.address)
+            )
+          ]
+    
+          // Update mintGroup if necessary
+          newTokens.forEach(token => {
+            state.mintGroup.jup.add(token.address)
+          })
+    
+          return state
+        }, false, { type: 'loadJupiterTokens' })
+      } catch (error) {
+        console.error('Failed to load Jupiter tokens:', error)
+      }
+    },
     loadTokensAct: (forceUpdate?: boolean, jupTokenType?: JupTokenType) => {
       const raydium = useAppStore.getState().raydium
       if (!raydium) return

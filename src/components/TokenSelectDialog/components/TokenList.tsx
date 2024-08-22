@@ -25,7 +25,7 @@ import useTokenPrice, { TokenPrice } from '@/hooks/token/useTokenPrice'
 const perPage = 30
 
 const USDCMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
-const SOLMint = PublicKey.default.toString()
+const SOLMint = 'So11111111111111111111111111111111111111112'
 const RAYMint = '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R'
 const USDTMint = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
 
@@ -59,6 +59,12 @@ export default forwardRef<
     mintList: fetchPriceList,
     refreshInterval: 1000 * 60 * 10
   })
+
+  const loadJupiterTokens = useTokenStore((state) => state.loadJupiterTokens)
+
+  useEffect(() => {
+    loadJupiterTokens()
+  }, [loadJupiterTokens])
 
   useEffect(() => {
     if (fetchPriceList.some((m) => !data[m])) return

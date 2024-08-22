@@ -1,12 +1,11 @@
 import { ChangeEvent, useCallback, useEffect, useMemo, useState, useRef, forwardRef, useImperativeHandle } from 'react'
-import { TokenInfo, WSOLMint } from '@raydium-io/raydium-sdk-v2'
 import { useTranslation } from 'react-i18next'
 import { PublicKey } from '@solana/web3.js'
 import { useEvent } from '@/hooks/useEvent'
 import SearchIcon from '@/icons/misc/SearchIcon'
 import AddTokenIcon from '@/icons/misc/AddTokenIcon'
 import RemoveTokenIcon from '@/icons/misc/RemoveTokenIcon'
-import { useTokenAccountStore, useTokenStore } from '@/store'
+import { Token, useTokenAccountStore, useTokenStore } from '@/store'
 import { colors } from '@/theme/cssVariables'
 import { sortItems } from '@/utils/sortItems'
 import { filterTokenFn } from '@/utils/token'
@@ -21,7 +20,6 @@ import useTokenInfo from '@/hooks/token/useTokenInfo'
 import { isValidPublicKey } from '@/utils/publicKey'
 import { formatToRawLocaleStr } from '@/utils/numberish/formatter'
 import useTokenPrice, { TokenPrice } from '@/hooks/token/useTokenPrice'
-
 const perPage = 30
 
 const USDCMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
@@ -29,6 +27,43 @@ const SOLMint = PublicKey.default.toString()
 const RAYMint = '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R'
 const USDTMint = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
 
+// Update TokenInfo type to include all necessary properties
+/* type TokenInfo = {
+  address: string;
+  decimals: number;
+  logoURI: string;
+  name: string;
+  symbol: string;
+  priority: number;
+  userAdded?: boolean;
+  type?: string;
+  tags: string[];
+  chainId: number;
+  programId: string;
+  extensions: Record<string, unknown>;
+}; */
+export interface BaseToken {
+  address: string;
+  decimals: number;
+  logoURI: string;
+  name: string;
+  symbol: string;
+  priority: number;
+  userAdded?: boolean;
+  type?: string;
+  chainId: number;
+  programId: string;
+  extensions: Record<string, unknown>;
+}
+export interface TokenInfo extends BaseToken {
+  tags: string[];
+}
+export function tokenToTokenInfo(token: Token): TokenInfo {
+  return {
+    ...token,
+    tags: token.tags || []
+  };
+}
 export interface TokenListHandles {
   resetSearch: () => void
 }
@@ -45,8 +80,8 @@ export default forwardRef<
   const { t } = useTranslation()
   const orgTokenList = useTokenStore((s) => s.displayTokenList)
   const orgTokenMap = useTokenStore((s) => s.tokenMap)
-  const setExtraTokenListAct = useTokenStore((s) => s.setExtraTokenListAct)
-  const unsetExtraTokenListAct = useTokenStore((s) => s.unsetExtraTokenListAct)
+  const setExtraTokenListAct = useTokenStore((s) => s.updateTokenPrice)
+  const unsetExtraTokenListAct = useTokenStore((s) => s.updateTokenPrice)
   const [getTokenBalanceUiAmount, tokenAccountMap, tokenAccounts] = useTokenAccountStore((s) => [
     s.getTokenBalanceUiAmount,
     s.tokenAccountMap,
@@ -65,7 +100,11 @@ export default forwardRef<
     setTokenPrice(data)
   }, [data, fetchPriceList])
 
-  const tokenList = useMemo(() => (filterFn ? orgTokenList.filter(filterFn) : orgTokenList), [filterFn, orgTokenList])
+  const tokenList = useMemo(() => {
+    const convertedList = orgTokenList.map(tokenToTokenInfo);
+    return filterFn ? convertedList.filter(filterFn) : convertedList;
+  }, [filterFn, orgTokenList]);
+
   const [filteredList, setFilteredList] = useState<TokenInfo[]>(tokenList)
   const [displayList, setDisplayList] = useState<TokenInfo[]>([])
   const [search, setSearch] = useState('')
@@ -99,8 +138,10 @@ export default forwardRef<
     }
     const sortedTokenList = sortItems(tokenList, {
       sortRules: [
-        // { value: (i) => (i.address === SOLMint || i.address === RAYMint ? i.address : null) },
-        { value: (i) => (i.tags.includes('unknown') ? null : i.symbol.length), compareFn }
+        {
+          value: (i: TokenInfo) => i.tags.includes('unknown') ? null : i.symbol.length,
+          compareFn
+        }
       ]
     })
     const filteredList = search ? filterTokenFn(sortedTokenList, { searchStr: search }) : sortedTokenList
@@ -120,7 +161,7 @@ export default forwardRef<
   useEffect(() => {
     customTokenInfo.current = {}
     if (!newToken) return
-    setExtraTokenListAct({ token: newToken, addToStorage: newToken.type === 'raydium' || newToken.type === 'jupiter' })
+    setExtraTokenListAct(newToken.address, { value: 0 })
   }, [newToken, setExtraTokenListAct])
 
   const showMoreData = useEvent(() => {
@@ -141,11 +182,13 @@ export default forwardRef<
   )
 
   const handleAddUnknownTokenClick = useCallback((token: TokenInfo) => {
-    setExtraTokenListAct({ token: { ...token, userAdded: true }, addToStorage: true, update: true })
-  }, [])
+    setExtraTokenListAct(token.address, { value: 0 })
+  }, [setExtraTokenListAct])
+
   const handleRemoveUnknownTokenClick = useCallback((token: TokenInfo) => {
-    unsetExtraTokenListAct(token)
-  }, [])
+    unsetExtraTokenListAct(token.address, { value: 0 })
+  }, [unsetExtraTokenListAct])
+
 
   const USDC = useMemo(() => orgTokenMap.get(USDCMint), [orgTokenMap])
   const SOL = useMemo(() => orgTokenMap.get(SOLMint), [orgTokenMap])
@@ -153,7 +196,12 @@ export default forwardRef<
   const USDT = useMemo(() => orgTokenMap.get(USDTMint), [orgTokenMap])
 
   const [usdcDisabled, solDisabled, rayDisabled, usdtDisabled] = filterFn
-    ? [!USDC || !filterFn(USDC), !SOL || !filterFn(SOL), !RAY || !filterFn(RAY), !USDT || !filterFn(USDT)]
+    ? [
+      !USDC || !filterFn(tokenToTokenInfo(USDC)),
+      !SOL || !filterFn(tokenToTokenInfo(SOL)),
+      !RAY || !filterFn(tokenToTokenInfo(RAY)),
+      !USDT || !filterFn(tokenToTokenInfo(USDT))
+    ]
     : [false, false, false, false]
 
   const renderTokenItem = useCallback(
@@ -161,13 +209,16 @@ export default forwardRef<
       <TokenRowItem
         token={token}
         balance={() => getBalance(token)}
-        onClick={(token) => onChooseToken(token)}
-        onAddUnknownTokenClick={(token) => handleAddUnknownTokenClick(token)}
-        onRemoveUnknownTokenClick={() => handleRemoveUnknownTokenClick(token)}
+        onClick={onChooseToken}
+        onAddUnknownTokenClick={handleAddUnknownTokenClick}
+        onRemoveUnknownTokenClick={handleRemoveUnknownTokenClick}
       />
     ),
-    [getBalance]
+    [getBalance, onChooseToken, handleAddUnknownTokenClick, handleRemoveUnknownTokenClick]
   )
+
+
+
   useImperativeHandle(ref, () => ({
     resetSearch: () => {
       setSearch('')
@@ -198,10 +249,10 @@ export default forwardRef<
         </Heading>
 
         <SimpleGrid gridTemplateColumns={'repeat(auto-fill, minmax(80px, 1fr))'} gap={3}>
-          <PopularTokenCell token={USDC} onClick={(token) => onChooseToken(token)} disabled={usdcDisabled} />
-          <PopularTokenCell token={SOL} onClick={(token) => onChooseToken(token)} disabled={solDisabled} />
-          <PopularTokenCell token={RAY} onClick={(token) => onChooseToken(token)} disabled={rayDisabled} />
-          <PopularTokenCell token={USDT} onClick={(token) => onChooseToken(token)} disabled={usdtDisabled} />
+          <PopularTokenCell token={USDC && tokenToTokenInfo(USDC)} onClick={(token) => onChooseToken(token)} disabled={usdcDisabled} />
+          <PopularTokenCell token={SOL && tokenToTokenInfo(SOL)} onClick={(token) => onChooseToken(token)} disabled={solDisabled} />
+          <PopularTokenCell token={RAY && tokenToTokenInfo(RAY)} onClick={(token) => onChooseToken(token)} disabled={rayDisabled} />
+          <PopularTokenCell token={USDT && tokenToTokenInfo(USDT)} onClick={(token) => onChooseToken(token)} disabled={usdtDisabled} />
         </SimpleGrid>
       </Box>
 
@@ -306,7 +357,7 @@ function TokenRowItem({
   onRemoveUnknownTokenClick: (token: TokenInfo) => void
 }) {
   const { t } = useTranslation()
-  const isUnknown = !token.type || token.type === 'unknown' || token.tags.includes('unknown')
+  const isUnknown = !token.type || token.type === 'unknown' || (token.tags && token.tags.includes('unknown'))
   const isTrusted = isUnknown && !!useTokenStore.getState().tokenMap.get(token.address)?.userAdded
 
   return (

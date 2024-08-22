@@ -67,6 +67,7 @@ export function SwapPanel({
 
   const [outputMint, setOutputMint] = useState<string>(RAYMint.toBase58())
   const [tokenInput, tokenOutput] = [tokenMap.get(inputMint), tokenMap.get(outputMint)]
+  console.log(tokenInput, tokenOutput)
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const isTokenLoaded = tokenMap.size > 0
   const { tokenInfo: unknownTokenA } = useTokenInfo({

@@ -5,16 +5,23 @@ import { shallow } from 'zustand/shallow'
 
 export default function useTokenSetting() {
   const displayTokenSettings = useAppStore((s) => s.displayTokenSettings)
-  const [setDisplayTokenListAct, loadTokensAct] = useTokenStore((s) => [s.setDisplayTokenListAct, s.loadTokensAct], shallow)
+  const [setDisplayTokenList, loadTokens] = useTokenStore(
+    (s) => [s.setDisplayTokenList, s.loadTokens],
+    shallow
+  )
 
   useEffect(() => {
-    setDisplayTokenListAct()
-  }, [displayTokenSettings, setDisplayTokenListAct])
+    setDisplayTokenList()
+  }, [displayTokenSettings, setDisplayTokenList])
 
   useEffect(() => {
+    // Initial load
+    loadTokens()
+
     const intervalId = window.setInterval(() => {
-      loadTokensAct(true)
-    }, 60 * 1000 * 5)
+      loadTokens()
+    }, 60 * 1000 * 5) // Every 5 minutes
+
     return () => clearInterval(intervalId)
-  }, [loadTokensAct])
+  }, [loadTokens])
 }

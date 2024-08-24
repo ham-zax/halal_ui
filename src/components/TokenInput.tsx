@@ -21,7 +21,7 @@ import { useEvent } from '@/hooks/useEvent'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
 import BalanceWalletIcon from '@/icons/misc/BalanceWalletIcon'
 import ChevronDownIcon from '@/icons/misc/ChevronDownIcon'
-import { useTokenAccountStore, useTokenStore } from '@/store'
+import { Token, useTokenAccountStore, useTokenStore } from '@/store'
 
 import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
@@ -228,7 +228,7 @@ function TokenInput(props: TokenInputProps) {
   })
 
   const handleSelectToken = useEvent((token: TokenInfo) => {
-    const isFreeze = isFreezeToken(token)
+    const isFreeze = isFreezeToken(token as ApiV3Token | TokenInfo)
     if (isFreeze) {
       setFreezeToken(token)
     }
@@ -255,26 +255,21 @@ function TokenInput(props: TokenInputProps) {
     onClose()
   })
 
-  const handleUnknownTokenConfirm = useEvent((token: TokenInfo | ApiV3Token) => {
-    setExtraTokenListAct({ token: { ...token, userAdded: true } as TokenInfo, addToStorage: true, update: true })
+  const handleUnknownTokenConfirm = useEvent((token: Token) => {
+    setExtraTokenListAct({ token: { ...token, userAdded: true }, addToStorage: true, update: true })
     onCloseUnknownTokenConfirm()
-    const isFreeze = isFreezeToken(token)
+    const isFreeze = isFreezeToken(token as ApiV3Token | TokenInfo)
     if (isFreeze) {
       if (name === 'swap') {
         onOpenFreezeTokenConfirm()
         return
       } else {
-        // toastSubject.next({
-        //   title: t('token_selector.token_freeze_warning'),
-        //   description: t('token_selector.token_has_freeze_disable'),
-        //   status: 'warning'
-        // })
+        // Handle freeze token warning here
       }
-      // return
     }
-    onTokenChange?.(token)
+    onTokenChange?.(token as ApiV3Token | TokenInfo)
     setTimeout(() => {
-      onTokenChange?.(token)
+      onTokenChange?.(token as ApiV3Token | TokenInfo)
     }, 0)
     onClose()
   })

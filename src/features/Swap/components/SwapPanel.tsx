@@ -277,7 +277,7 @@ export function SwapPanel({
           name="swap"
           topLeftLabel={t('swap.from_label')}
           ctrSx={getCtrSx('BaseIn')}
-          token={tokenInput}
+          token={tokenInput as TokenInfo | ApiV3Token}
           value={isSwapBaseIn ? amountIn : inputAmount}
           readonly={swapDisabled || (!isSwapBaseIn && isComputing)}
           disableClickBalance={swapDisabled}
@@ -291,8 +291,8 @@ export function SwapPanel({
         <TokenInput
           name="swap"
           topLeftLabel={t('swap.to_label')}
-          ctrSx={getCtrSx('BaseOut')}
-          token={tokenOutput}
+          ctrSx={getCtrSx('BaseOut')}          
+          token={tokenInput as TokenInfo | ApiV3Token}
           value={isSwapBaseIn ? outputAmount : amountIn}
           readonly={swapDisabled || (isSwapBaseIn && isComputing)}
           onChange={handleInput2Change}
@@ -304,14 +304,15 @@ export function SwapPanel({
       {/* swap info */}
       <Collapse in={hasValidAmountOut} animateOpacity>
         <Box mb={[4, 5]}>
-          <SwapInfoBoard
+          SWAP INFO BOARD WAS HERE
+         {/*  <SwapInfoBoard
             amountIn={amountIn}
             tokenInput={tokenInput}
             tokenOutput={tokenOutput}
             isComputing={isComputing && !isSending}
             computedSwapResult={computeResult}
             onRefresh={handleRefresh}
-          />
+          /> */}
         </Box>
       </Collapse>
 

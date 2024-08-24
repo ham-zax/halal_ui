@@ -1,4 +1,3 @@
-import { TxVersion, solToWSol } from '@raydium-io/raydium-sdk-v2'
 import axios from '@/api/axios'
 import { useAppStore } from '@/store/mockAppStore'
 import { useSwapStore } from './useSwapStore'
@@ -31,23 +30,17 @@ export default function useSwap(props: {
   } = props || {}
 
   const [amount, setAmount] = useState('')
-  const [inputMint, outputMint] = [
-    propInputMint ? solToWSol(propInputMint).toBase58() : propInputMint,
-    propOutputMint ? solToWSol(propOutputMint).toBase58() : propOutputMint
-  ]
+  const inputMint = propInputMint
+  const outputMint = propOutputMint
 
-  const [txVersion, urlConfigs] = useAppStore((s) => [s.txVersion, s.urlConfigs], shallow)
+  const [urlConfigs] = useAppStore((s) => [s.urlConfigs], shallow)
   const slippage = useSwapStore((s) => s.slippage)
   const slippageBps = new Decimal(propsSlippage || slippage * 10000).toFixed(0)
 
   const apiTrail = swapType === 'BaseOut' ? 'swap-base-out' : 'swap-base-in'
   const url =
     inputMint && outputMint && !new Decimal(amount.trim() || 0).isZero()
-      ? `${urlConfigs.SWAP_HOST}${
-          urlConfigs.SWAP_COMPUTE
-        }${apiTrail}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}&txVersion=${
-          txVersion === TxVersion.V0 ? 'V0' : 'LEGACY'
-        }`
+      ? `${urlConfigs.BASE_HOST}/swap?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`
       : null
 
   const updateAmount = useCallback(

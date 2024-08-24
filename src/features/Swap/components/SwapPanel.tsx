@@ -62,12 +62,14 @@ export function SwapPanel({
   const sendingResult = useRef<ApiSwapV1OutSuccess | undefined>()
   const wsolBalance = getTokenBalanceUiAmount({ mint: NATIVE_MINT.toBase58(), decimals: SOL_INFO.decimals })
 
-  const [inputMint, setInputMint] = useState<string>(PublicKey.default.toBase58())
   const [swapType, setSwapType] = useState<'BaseIn' | 'BaseOut'>('BaseIn')
 
-  const [outputMint, setOutputMint] = useState<string>(RAYMint.toBase58())
-  const [tokenInput, tokenOutput] = [tokenMap.get(inputMint), tokenMap.get(outputMint)]
-  console.log(tokenInput, tokenOutput)
+  const [inputMint, setInputMint] = useState<string>('');
+  const [outputMint, setOutputMint] = useState<string>('');
+  const [tokenInput, setTokenInput] = useState<TokenInfo | ApiV3Token | null>(null);
+  const [tokenOutput, setTokenOutput] = useState<TokenInfo | ApiV3Token | null>(null);
+
+  console.log('Render: inputMint =', inputMint, 'outputMint =', outputMint);
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const isTokenLoaded = tokenMap.size > 0
   const { tokenInfo: unknownTokenA } = useTokenInfo({
@@ -84,11 +86,18 @@ export function SwapPanel({
   }, [defaultInput, defaultOutput])
 
   useEffect(() => {
-    if (!cacheLoaded) return
-    onInputMintChange?.(inputMint)
-    onOutputMintChange?.(outputMint)
-    setUrlQuery({ inputMint: mintToUrl(inputMint), outputMint: mintToUrl(outputMint) })
-  }, [inputMint, outputMint, cacheLoaded])
+    setTokenInput(tokenMap.get(inputMint) as ApiV3Token | TokenInfo || null);
+    setTokenOutput(tokenMap.get(outputMint)  as ApiV3Token | TokenInfo || null);
+  }, [inputMint, outputMint, tokenMap]);
+
+  useEffect(() => {
+    console.log('Effect triggered: inputMint or outputMint changed', { inputMint, outputMint });
+    if (!cacheLoaded) return;
+    onInputMintChange?.(inputMint);
+    onOutputMintChange?.(outputMint);
+    setUrlQuery({ inputMint: mintToUrl(inputMint), outputMint: mintToUrl(outputMint) });
+    setSwapPairCache({ inputMint, outputMint });
+  }, [inputMint, outputMint, cacheLoaded, onInputMintChange, onOutputMintChange]);
 
   const [amountIn, setAmountIn] = useState<string>('')
   const [needPriceUpdatedAlert, setNeedPriceUpdatedAlert] = useState(false)
@@ -177,39 +186,44 @@ export function SwapPanel({
     setAmountIn(val)
   }, [])
 
-  const handleSelectToken = useCallback(
-    (token: TokenInfo | ApiV3Token, side?: 'input' | 'output') => {
-      if (side === 'input') {
-        if (getMintPriority(token.address) > getMintPriority(outputMint)) {
-          onDirectionNeedReverse?.()
-        }
-        setInputMint(token.address)
-        setOutputMint((mint) => (token.address === mint ? '' : mint))
+  const handleSelectToken = useCallback((token: TokenInfo | ApiV3Token, side: 'input' | 'output') => {
+    console.log(`handleSelectToken called: side = ${side}, newTokenAddress = ${token.address}`);
+    
+    if (side === 'input') {
+      if (token.address === outputMint) {
+        setInputMint(token.address);
+        setOutputMint(inputMint);
+      } else {
+        setInputMint(token.address);
       }
-      if (side === 'output') {
-        if (getMintPriority(inputMint) > getMintPriority(token.address)) {
-          onDirectionNeedReverse?.()
-        }
-        setOutputMint(token.address)
-        setInputMint((mint) => {
-          if (token.address === mint) {
-            return ''
-          }
-          return mint
-        })
+    } else if (side === 'output') {
+      if (token.address === inputMint) {
+        setOutputMint(token.address);
+        setInputMint(outputMint);
+      } else {
+        setOutputMint(token.address);
       }
-    },
-    [inputMint, outputMint]
-  )
+    }
 
-  const handleChangeSide = useEvent(() => {
-    setInputMint(outputMint)
-    setOutputMint(inputMint)
+    // Check if we need to reverse the direction based on token priorities
+    if (side === 'input' && getMintPriority(token.address) > getMintPriority(outputMint)) {
+      console.log('Reversing direction: input priority > output priority');
+      onDirectionNeedReverse?.();
+    } else if (side === 'output' && getMintPriority(inputMint) > getMintPriority(token.address)) {
+      console.log('Reversing direction: input priority > output priority');
+      onDirectionNeedReverse?.();
+    }
+  }, [inputMint, outputMint, onDirectionNeedReverse]);
+
+  const handleChangeSide = useCallback(() => {
+    console.log('handleChangeSide called');
+    setInputMint(outputMint);
+    setOutputMint(inputMint);
     setSwapPairCache({
       inputMint: outputMint,
       outputMint: inputMint
-    })
-  })
+    });
+  }, [inputMint, outputMint]);
 
   const balanceAmount = getTokenBalanceUiAmount({ mint: inputMint, decimals: tokenInput?.decimals }).amount
   const balanceNotEnough = balanceAmount.lt(inputAmount || 0) ? t('error.balance_not_enough') : undefined
@@ -271,13 +285,13 @@ export function SwapPanel({
 
   return (
     <>
-      <Flex mb={[4, 5]} direction="column">
-        {/* input */}
+  <Flex mb={[4, 5]} direction="column">
         <TokenInput
           name="swap"
+          key={`input-${inputMint}`}
           topLeftLabel={t('swap.from_label')}
           ctrSx={getCtrSx('BaseIn')}
-          token={tokenInput as TokenInfo | ApiV3Token}
+          token={tokenInput || inputMint}
           value={isSwapBaseIn ? amountIn : inputAmount}
           readonly={swapDisabled || (!isSwapBaseIn && isComputing)}
           disableClickBalance={swapDisabled}
@@ -287,12 +301,12 @@ export function SwapPanel({
           defaultUnknownToken={unknownTokenA}
         />
         <SwapIcon onClick={handleChangeSide} />
-        {/* output */}
         <TokenInput
           name="swap"
+          key={`output-${outputMint}`}
           topLeftLabel={t('swap.to_label')}
           ctrSx={getCtrSx('BaseOut')}          
-          token={tokenInput as TokenInfo | ApiV3Token}
+          token={tokenOutput || outputMint}
           value={isSwapBaseIn ? outputAmount : amountIn}
           readonly={swapDisabled || (isSwapBaseIn && isComputing)}
           onChange={handleInput2Change}

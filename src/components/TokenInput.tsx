@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 import { ApiV3Token, TokenInfo, SOL_INFO } from '@raydium-io/raydium-sdk-v2'
 import Decimal from 'decimal.js'
-import React, { ReactNode, useEffect, useState, useRef } from 'react'
+import React, { ReactNode, useEffect, useState, useRef, useCallback } from 'react'
 import useTokenPrice from '@/hooks/token/useTokenPrice'
 import { useEvent } from '@/hooks/useEvent'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
@@ -161,7 +161,8 @@ function TokenInput(props: TokenInputProps) {
 
   // price
   const tokenMap = useTokenStore((s) => s.tokenMap)
-  const token = typeof inputToken === 'string' ? tokenMap.get(inputToken) : inputToken
+  
+  const token = typeof props.token === 'string' ? tokenMap.get(props.token) : props.token;
   const { data: tokenPrice } = useTokenPrice({
     mintList: [token?.address]
   })
@@ -222,57 +223,54 @@ function TokenInput(props: TokenInputProps) {
     const isUserAddedTokenEnable = displayTokenSettings.userAdded
     return isUnknown && (!isTrusted || !isUserAddedTokenEnable)
   })
-
-  const isFreezeToken = useEvent((token: TokenInfo | ApiV3Token) => {
-    return token?.tags.includes('hasFreeze') && !whiteListMap.has(token.address)
-  })
-
-  const handleSelectToken = useEvent((token: TokenInfo) => {
-    const isFreeze = isFreezeToken(token as ApiV3Token | TokenInfo)
+  const isFreezeToken = useEvent((token: TokenInfo | ApiV3Token | undefined) => {
+    if (!token) return false;
+    
+    const hasFreezeTag = Array.isArray(token.tags) && token.tags.includes('hasFreeze');
+    return hasFreezeTag && !whiteListMap.has(token.address);
+  });
+  const handleSelectToken = useEvent((token: TokenInfo | ApiV3Token) => {
+    console.log('handleSelectToken called with token:', token);
+    const isFreeze = isFreezeToken(token);
     if (isFreeze) {
-      setFreezeToken(token)
+      setFreezeToken(token);
     }
-    const shouldShowUnknownTokenConfirm = isUnknownToken(token)
+    const shouldShowUnknownTokenConfirm = isUnknownToken(token as TokenInfo);
     if (shouldShowUnknownTokenConfirm) {
-      setUnknownToken(token)
-      onOpenUnknownTokenConfirm()
-      return
+      setUnknownToken(token);
+      onOpenUnknownTokenConfirm();
+      return;
     }
     if (isFreeze) {
       if (name === 'swap') {
-        onOpenFreezeTokenConfirm()
-        return
+        onOpenFreezeTokenConfirm();
+        return;
       } else {
-        // toastSubject.next({
-        //   title: t('token_selector.token_freeze_warning'),
-        //   description: t('token_selector.token_has_freeze_disable'),
-        //   status: 'warning'
-        // })
+        // Handle freeze token warning here
+        console.warn('Freeze token selected:', token);
       }
-      // return
     }
-    onTokenChange?.(token)
-    onClose()
-  })
-
-  const handleUnknownTokenConfirm = useEvent((token: Token) => {
-    setExtraTokenListAct({ token: { ...token, userAdded: true }, addToStorage: true, update: true })
-    onCloseUnknownTokenConfirm()
-    const isFreeze = isFreezeToken(token as ApiV3Token | TokenInfo)
+    console.log('Calling onTokenChange with token:', token);
+    onTokenChange?.(token);
+    onClose();
+  });
+  const handleUnknownTokenConfirm = useCallback((token: Token) => {
+    console.log('handleUnknownTokenConfirm called with token:', token);
+    setExtraTokenListAct({ token: { ...token, userAdded: true }, addToStorage: true, update: true });
+    onCloseUnknownTokenConfirm();
+    const isFreeze = isFreezeToken(token as ApiV3Token | TokenInfo);
     if (isFreeze) {
       if (name === 'swap') {
-        onOpenFreezeTokenConfirm()
-        return
+        onOpenFreezeTokenConfirm();
+        return;
       } else {
         // Handle freeze token warning here
       }
     }
-    onTokenChange?.(token as ApiV3Token | TokenInfo)
-    setTimeout(() => {
-      onTokenChange?.(token as ApiV3Token | TokenInfo)
-    }, 0)
-    onClose()
-  })
+    console.log('Calling onTokenChange with token:', token);
+    onTokenChange?.(token as ApiV3Token | TokenInfo);
+    onClose();
+  }, [setExtraTokenListAct, onCloseUnknownTokenConfirm, isFreezeToken, name, onTokenChange, onClose, onOpenFreezeTokenConfirm]);
 
   const handleFreezeTokenConfirm = useEvent((token: TokenInfo | ApiV3Token) => {
     onTokenChange?.(token)
@@ -308,9 +306,10 @@ function TokenInput(props: TokenInputProps) {
   })
 
   useEffect(() => {
-    if (!defaultUnknownToken) return
-    handleSelectToken(defaultUnknownToken)
-  }, [defaultUnknownToken?.address])
+    if (!defaultUnknownToken) return;
+    console.log('Default unknown token changed:', defaultUnknownToken);
+    handleSelectToken(defaultUnknownToken);
+  }, [defaultUnknownToken, handleSelectToken]);
 
   return (
     <Box bg={colors.backgroundDark50} position={'relative'} rounded={12} sx={ctrSx}>
@@ -439,8 +438,13 @@ function TokenInput(props: TokenInputProps) {
           <Text textAlign="right">~{formatCurrency(totalPrice, { symbol: '$', maximumDecimalTrailingZeroes: 5 })}</Text>
         </GridItem>
       </Grid>
-      <TokenSelectDialog isOpen={isOpen} onClose={onClose} onSelectValue={handleSelectToken} filterFn={filterFn} ref={tokenListRef} />
-      {unknownToken !== undefined && (
+      <TokenSelectDialog
+        isOpen={isOpen}
+        onClose={onClose}
+        onSelectValue={handleSelectToken}
+        filterFn={filterFn}
+        ref={tokenListRef}
+      />      {unknownToken !== undefined && (
         <TokenUnknownAddDialog
           isOpen={isOpenUnknownTokenConfirm}
           onClose={onCloseUnknownTokenConfirm}

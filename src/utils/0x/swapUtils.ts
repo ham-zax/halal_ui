@@ -16,7 +16,7 @@ export async function getPrice(fromTokenObj: any, toTokenObj: any, amount: numbe
         sellAmount: amount,
     }
     const headers = {'0x-api-key': '615cde0f-2cc2-4ffd-8c6e-d376603e0a1b'};
-    const response = await fetch(`https://sepolia.api.0x.org/swap/v1/price?${qs(params)}`, { headers });
+    const response = await fetch(`https://api.0x.org/swap/v1/price?${qs(params)}`, { headers });
     let swapPriceJSON = await response.json();
     return swapPriceJSON;
 }
@@ -29,7 +29,7 @@ async function getQuote(fm: string, to: string, from_amount: bigint) {
     };
     
     const headers = {'0x-api-key': '615cde0f-2cc2-4ffd-8c6e-d376603e0a1b'};
-    const response = await fetch(`https://sepolia.api.0x.org/swap/v1/quote?${qs(params)}`, { headers });
+    const response = await fetch(`https://api.0x.org/swap/v1/quote?${qs(params)}`, { headers });
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }

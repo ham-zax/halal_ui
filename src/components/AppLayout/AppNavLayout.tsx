@@ -43,6 +43,7 @@ import { keyframes } from '@emotion/react'
 import AppVersion from './AppVersion'
 import { ConnectButton, lightTheme } from 'thirdweb/react'
 import { client, wallets } from '@/utils/thirdweb/client'
+import { ethereum, polygon, sepolia } from 'thirdweb/chains'
 
 export interface NavSettings {
   // colorTheme: 'dark' | 'light'
@@ -173,7 +174,6 @@ function AppNavLayout({
           {/* <EVMWallet />  don't need currently yet*/}
           {/* <SolWallet /> */}
           <ConnectButton
-            client={client}
             wallets={wallets}
             theme={lightTheme({
               colors: { primaryButtonBg: "#5f63f4" },
@@ -182,6 +182,13 @@ function AppNavLayout({
               size: "wide",
               showThirdwebBranding: false,
             }}
+            client={client}
+            appMetadata={{
+                name: "Halal IO",
+                url: "https://halal.io",
+            }}
+            chain={ethereum}
+            chains={[sepolia, polygon, ethereum]}
           />
         </Flex>
       </HStack>

@@ -40,5 +40,12 @@ export const TOKENS = [
         "logoURI": "https://assets.coingecko.com/coins/images/325/standard/Tether.png",
         "name": "Tether USD",
         "symbol": "USDT"
+    },
+    {
+        "address": "0x0000000000000000000000000000000000001010",
+        "decimals": 18,
+        "logoURI": "https://assets.coingecko.com/coins/images/325/standard/Tether.png",
+        "name": "MATIC",
+        "symbol": "MATIC"
     }
 ];

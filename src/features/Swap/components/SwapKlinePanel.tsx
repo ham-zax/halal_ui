@@ -4,12 +4,12 @@ import { TimeType } from '@/hooks/pool/useFetchPoolKLine'
 import { colors } from '@/theme/cssVariables'
 import toPercentString from '@/utils/numberish/toPercentString'
 import { Grid, GridItem, HStack, Text, Box } from '@chakra-ui/react'
-import { ApiV3Token } from '@raydium-io/raydium-sdk-v2'
 import { useState } from 'react'
 import CandleChart from './CandleChart'
 import dayjs from 'dayjs'
 import SwapIcon from '@/icons/misc/SwapIcon'
 import { formatCurrency, formatToRawLocaleStr } from '@/utils/numberish/formatter'
+import { Token } from '@/store/useTokenStore'
 
 export function SwapKlinePanel({
   baseToken,
@@ -20,8 +20,8 @@ export function SwapKlinePanel({
   onTimeTypeChange
 }: {
   untilDate: number
-  baseToken: ApiV3Token | undefined
-  quoteToken: ApiV3Token | undefined
+  baseToken: Token | undefined
+  quoteToken: Token | undefined
   timeType: TimeType
   onDirectionToggle?(): void
   onTimeTypeChange?(timeType: TimeType): void

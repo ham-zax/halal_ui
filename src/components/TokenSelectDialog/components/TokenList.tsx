@@ -27,21 +27,6 @@ const SOLMint = PublicKey.default.toString()
 const RAYMint = '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R'
 const USDTMint = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
 
-// Update TokenInfo type to include all necessary properties
-/* type TokenInfo = {
-  address: string;
-  decimals: number;
-  logoURI: string;
-  name: string;
-  symbol: string;
-  priority: number;
-  userAdded?: boolean;
-  type?: string;
-  tags: string[];
-  chainId: number;
-  programId: string;
-  extensions: Record<string, unknown>;
-}; */
 export interface BaseToken {
   address: string;
   decimals: number;

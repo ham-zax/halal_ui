@@ -1,4 +1,3 @@
-// utils/swapUtils.ts
 import { sepolia } from "thirdweb/chains";
 import { prepareTransaction } from "thirdweb";
 import { client } from "../thirdweb/client";
@@ -7,6 +6,19 @@ function qs(obj: any) {
     return Object.keys(obj)
         .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`)
         .join('&');
+}
+
+
+export async function getPrice(fromTokenObj: any, toTokenObj: any, amount: number){
+    const params = {
+        sellToken: fromTokenObj?.address,
+        buyToken: toTokenObj?.address,
+        sellAmount: amount,
+    }
+    const headers = {'0x-api-key': '615cde0f-2cc2-4ffd-8c6e-d376603e0a1b'};
+    const response = await fetch(`https://sepolia.api.0x.org/swap/v1/price?${qs(params)}`, { headers });
+    let swapPriceJSON = await response.json();
+    return swapPriceJSON;
 }
 
 async function getQuote(fm: string, to: string, from_amount: bigint) {

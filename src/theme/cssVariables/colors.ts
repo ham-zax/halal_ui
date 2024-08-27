@@ -132,7 +132,14 @@ export const darkColors: Record<keyof typeof colors, string> = {
   panelCardShadow: '0px 8px 24px rgba(79, 83, 243, 0.12)',
   panelCardBorder: 'unset'
 }
+/*   secondary: '#075E54',
+  secondary10: 'rgba(34, 209, 248, 0.1)',
 
+  // component color
+  backgroundDark: '#e7f4f2',
+  backgroundDark50: '#b8ddd8',
+  backgroundMedium: '#71bab2',
+  backgroundLight: '#e9fbf0', */
 export const lightColors: Partial<typeof darkColors> = {
   // app main bg color
   primary: '#abc4ff',
@@ -241,8 +248,8 @@ export const lightColors: Partial<typeof darkColors> = {
   inputMask: '#fff3',
 
   // customize (by V3 frontend coder)
+  // backgroundApp: 'linear-gradient(0deg, rgba(255, 255, 255, 0) 9.49%, rgba(74, 74, 74, 0.04) 71.04%), #FFFFFF',
   backgroundApp: '#fff',
-
   solidButtonBg: 'linear-gradient(272deg, #4F53F3 2.63%, #8C6EEF 95.31%)',
   outlineButtonBg: 'linear-gradient(270deg, #8C6EEF1a 0%, #4F53F31a 100%)',
   filledProgressBg: 'linear-gradient(270deg, #8C6EEF 0%, #4F53F3 100%)',

@@ -1,7 +1,7 @@
 import { Box, Grid, GridItem, HStack, VStack, useClipboard } from '@chakra-ui/react'
 import { RAYMint, SOLMint } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import PanelCard from '@/components/PanelCard'
@@ -27,15 +27,6 @@ import { getMintPriority } from '@/utils/token'
 import Tooltip from '@/components/Tooltip'
 // import { MoonpayBuy } from '@/components/Moonpay'
 import { toastSubject } from '@/hooks/toast/useGlobalToast'
-import { TOKENS } from './tokens'
-import { TransactionButton, useActiveAccount } from 'thirdweb/react'
-import { trySwap } from '@/utils/0x/swapUtils'
-
-function qs(obj: any) {
-  return Object.keys(obj)
-    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`)
-    .join('&');
-}
 
 export default function Swap() {
   // const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
@@ -45,7 +36,7 @@ export default function Swap() {
   const [isMobileChartShown, setIsMobileChartShown] = useState<boolean>(false)
   const [isChartLeft, setIsChartLeft] = useState<boolean>(true)
   const isMobile = useAppStore((s) => s.isMobile)
-  // const publicKey = useAppStore((s) => s.publicKey)
+  const publicKey = useAppStore((s) => s.publicKey)
   const connected = useAppStore((s) => s.connected)
   const [directionReverse, setDirectionReverse] = useState<boolean>(false)
   const [selectedTimeType, setSelectedTimeType] = useState<TimeType>('15m')
@@ -102,73 +93,6 @@ export default function Swap() {
       klineRef.current.style.height = height
     }
   }, [])
-  const activeAccount = useActiveAccount();
-
-  const [transactionResp, setTransactionResp] = useState<any>(undefined);
-  const [fromToken, setFromToken] = useState(TOKENS[0].address);
-  const [toToken, setToToken] = useState(TOKENS[1].address);
-  const [fromAmount, setFromAmount] = useState("");
-  const [toValue, setToValue] = useState(0);
-  const [gas, setGas] = useState<string | null>(null);
-
-  const selectToken = TOKENS.map(token =>
-    <option key={token.address} value={token.address}>{token.symbol}</option>
-  )
-
-  const getPrice = async (fromTokenObj: any, toTokenObj: any, amount: string) => {
-    const params = {
-      sellToken: fromTokenObj.address,
-      buyToken: toTokenObj.address,
-      sellAmount: amount,
-    };
-    const headers = { '0x-api-key': '615cde0f-2cc2-4ffd-8c6e-d376603e0a1b' };
-    const response = await fetch(`https://sepolia.api.0x.org/swap/v1/price?${qs(params)}`, { headers });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  };
-
-  const calculateToValue = useCallback(async () => {
-    if (!fromToken || !toToken || !fromAmount || !activeAccount?.address) {
-      console.log('Missing required data for calculateToValue');
-      return;
-    }
-    const fromTokenObj = TOKENS.find((item) => item.address === fromToken);
-    const toTokenObj = TOKENS.find((item) => item.address === toToken);
-
-    if (!fromTokenObj || !toTokenObj) {
-      console.log('Invalid token objects');
-      return;
-    }
-
-    try {
-      console.log('Calculating swap values');
-      let amount = BigInt(Math.floor(parseFloat(fromAmount) * 10 ** fromTokenObj.decimals));
-      console.log('Calculated amount:', amount.toString());
-      let swapPriceJSON = await getPrice(fromTokenObj, toTokenObj, amount.toString());
-
-      setToValue(Number(swapPriceJSON.buyAmount) / (10 ** toTokenObj.decimals));
-      setGas(swapPriceJSON.estimatedGas);
-
-      const resp = await trySwap(
-        activeAccount.address,
-        fromTokenObj.address,
-        toTokenObj.address,
-        amount
-      );
-      console.log('Swap response:', resp);
-      setTransactionResp(resp);
-    } catch (error) {
-      console.error('Error calculating swap:', error);
-      // Handle error (e.g., show error message to user)
-    }
-  }, [fromToken, toToken, fromAmount, activeAccount]);
-
-  useEffect(() => {
-    console.log('useEffect triggered, calling calculateToValue');
-    calculateToValue();
-  }, [calculateToValue]);
 
   useEffect(() => {
     // inputMint === solMintAddress || outputMint === solMintAddress ? setIsBlinkReferralActive(true) : setIsBlinkReferralActive(false)
@@ -177,10 +101,10 @@ export default function Swap() {
     const _inputMint = inputMint === def ? 'sol' : inputMint
     const _outputMint = outputMint === def ? 'sol' : outputMint
     const href = `https://raydium.io/swap/?inputMint=${_inputMint}&outputMint=${_outputMint}`
-    const walletAddress = 'no address'
+    const walletAddress = publicKey
     const copyUrl = connected ? href + `&referrer=${walletAddress}` : href
     setValue(copyUrl)
-  }, [inputMint, outputMint, connected])
+  }, [inputMint, outputMint, connected, publicKey])
 
   return (
     <VStack
@@ -211,9 +135,9 @@ export default function Swap() {
             <LinkIcon />
           </Box>
         </Tooltip>
-        MoonpayBuy was gere
-        {/* <MoonpayBuy>
-          <DollarIcon />
+{/*         <MoonpayBuy>
+          <DollarIcon />        MoonpayBuy was here
+
         </MoonpayBuy> */}
 
         {!isMobile && isPCChartShown && (
@@ -257,36 +181,6 @@ export default function Swap() {
         gap={[3, isPCChartShown ? 4 : 0]}
       >
         <GridItem ref={swapPanelRef} gridArea="panel">
-          <div className="swapHolder">
-            <h4>Swap</h4>
-            <div>
-              <select value={fromToken} onChange={(e) => setFromToken(e.target.value)}>
-                {selectToken}
-              </select>
-              <input
-                value={fromAmount}
-                onChange={(e) => setFromAmount(e.target.value)}
-                placeholder="amount"
-              />
-            </div>
-            <div>
-              <select value={toToken} onChange={(e) => setToToken(e.target.value)}>
-                {selectToken}
-              </select>
-              <input value={toValue} readOnly placeholder="amount" />
-            </div>
-            <div>
-              <span>Estimated Gas: </span>
-              <span>{gas}</span>
-            </div>
-            {transactionResp && (
-              <TransactionButton
-                transaction={transactionResp}
-              >
-                Swap
-              </TransactionButton>
-            )}
-          </div>
           <PanelCard p={[3, 6]} flexGrow={['1', 'unset']}>
             <SwapPanel
               onInputMintChange={setInputMint}
@@ -307,7 +201,7 @@ export default function Swap() {
               onTimeTypeChange={setSelectedTimeType}
             />
           </PanelCard>
-          {isMobile && (
+{/*           {isMobile && (
             <PanelCard
               p={[3, 6]}
               gap={0}
@@ -320,8 +214,8 @@ export default function Swap() {
                 untilDate={untilDate.current}
                 baseToken={baseToken}
                 quoteToken={quoteToken}
-              // onDirectionToggle={() => setDirectionReverse((b) => !b)}
-              // onTimeTypeChange={setSelectedTimeType}
+                // onDirectionToggle={() => setDirectionReverse((b) => !b)}
+                // onTimeTypeChange={setSelectedTimeType}
               />
               <SwapKlinePanelMobileDrawer
                 untilDate={untilDate.current}
@@ -334,7 +228,7 @@ export default function Swap() {
                 onTimeTypeChange={setSelectedTimeType}
               />
             </PanelCard>
-          )}
+          )} */}
         </GridItem>
       </Grid>
     </VStack>

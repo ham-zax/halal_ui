@@ -17,6 +17,7 @@ export interface Token {
   userAdded?: boolean;
   type?: string;
   tags?: string[];
+  programId?: string;
 }
 
 interface TokenStore {

@@ -1,37 +1,33 @@
-import ConnectedButton from '@/components/ConnectedButton'
-import { QuestionToolTip } from '@/components/QuestionToolTip'
-import TokenInput, { DEFAULT_SOL_RESERVER } from '@/components/TokenInput'
-import { useEvent } from '@/hooks/useEvent'
-import { useHover } from '@/hooks/useHover'
-import { useTokenAccountStore, useTokenStore } from '@/store'
-
-import { useAppStore } from '@/store/mockAppStore'
-import { colors } from '@/theme/cssVariables'
-import { Box, Button, Collapse, Flex, HStack, SimpleGrid, Text, useDisclosure, CircularProgress } from '@chakra-ui/react'
-import { ApiV3Token, RAYMint, SOL_INFO, TokenInfo } from '@raydium-io/raydium-sdk-v2'
+import { Box, Grid, GridItem, HStack, VStack, useClipboard, Button, Flex, Text, SimpleGrid, CircularProgress } from '@chakra-ui/react'
+import { ApiV3Token, TokenInfo } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { shallow } from 'zustand/shallow'
-import CircleInfo from '@/icons/misc/CircleInfo'
-import { getSwapPairCache, setSwapPairCache } from '../util'
+import Decimal from 'decimal.js'
+
+import ConnectedButton from '@/components/ConnectedButton'
+import TokenInput from '@/components/TokenInput'
+import { useEvent } from '@/hooks/useEvent'
+import { useHover } from '@/hooks/useHover'
+import { useTokenAccountStore, useTokenStore } from '@/store'
+import { useAppStore } from '@/store/mockAppStore'
+import { colors } from '@/theme/cssVariables'
 import { urlToMint, mintToUrl, isSolWSol, getMintPriority } from '@/utils/token'
-import { SwapInfoBoard } from './SwapInfoBoard'
+import { useRouteQuery, setUrlQuery } from '@/utils/routeTools'
+import { formatToRawLocaleStr } from '@/utils/numberish/formatter'
+import { debounce } from '@/utils/functionMethods'
+import useTokenInfo from '@/hooks/token/useTokenInfo'
+
 import SwapButtonTwoTurnIcon from '@/icons/misc/SwapButtonTwoTurnIcon'
 import SwapButtonOneTurnIcon from '@/icons/misc/SwapButtonOneTurnIcon'
-import useSwap from '../useSwap'
-import { ApiSwapV1OutSuccess } from '../type'
-import { useSwapStore } from '../useSwapStore'
-import Decimal from 'decimal.js'
-import HighRiskAlert from './HighRiskAlert'
-import { useRouteQuery, setUrlQuery } from '@/utils/routeTools'
+import CircleInfo from '@/icons/misc/CircleInfo'
 import WarningIcon from '@/icons/misc/WarningIcon'
-import dayjs from 'dayjs'
-import { NATIVE_MINT } from '@solana/spl-token'
-import { Trans } from 'react-i18next'
-import { formatToRawLocaleStr } from '@/utils/numberish/formatter'
-import useTokenInfo from '@/hooks/token/useTokenInfo'
-import { debounce } from '@/utils/functionMethods'
+
+import { useActiveAccount, TransactionButton } from "thirdweb/react"
+
+import { getSwapPairCache, setSwapPairCache } from '../util'
+import { getPrice, trySwap } from '@/utils/0x/swapUtils'
 
 export function SwapPanel({
   onInputMintChange,
@@ -42,35 +38,31 @@ export function SwapPanel({
   onOutputMintChange?: (mint: string) => void
   onDirectionNeedReverse?(): void
 }) {
+  const { t, i18n } = useTranslation()
   const query = useRouteQuery<{ inputMint: string; outputMint: string }>()
   const [urlInputMint, urlOutputMint] = [urlToMint(query.inputMint), urlToMint(query.outputMint)]
   const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
   const [defaultInput, defaultOutput] = [urlInputMint || cacheInput, urlOutputMint || cacheOutput]
 
-  const { t, i18n } = useTranslation()
   const { swap: swapDisabled = false } = useAppStore().featureDisabled
-  const swapTokenAct = useSwapStore((s) => s.swapTokenAct)
-  const unWrapSolAct = useSwapStore((s) => s.unWrapSolAct)
   const tokenMap = useTokenStore((s) => s.tokenMap)
   const [getTokenBalanceUiAmount, fetchTokenAccountAct, refreshTokenAccTime] = useTokenAccountStore(
     (s) => [s.getTokenBalanceUiAmount, s.fetchTokenAccountAct, s.refreshTokenAccTime],
     shallow
   )
-  const { isOpen: isSending, onOpen: onSending, onClose: offSending } = useDisclosure()
-  const { isOpen: isUnWrapping, onOpen: onUnWrapping, onClose: offUnWrapping } = useDisclosure()
-  const { isOpen: isHightRiskOpen, onOpen: onHightRiskOpen, onClose: offHightRiskOpen } = useDisclosure()
-  const sendingResult = useRef<ApiSwapV1OutSuccess | undefined>()
-  const wsolBalance = getTokenBalanceUiAmount({ mint: NATIVE_MINT.toBase58(), decimals: SOL_INFO.decimals })
-
-  const [swapType, setSwapType] = useState<'BaseIn' | 'BaseOut'>('BaseIn')
 
   const [inputMint, setInputMint] = useState<string>('');
   const [outputMint, setOutputMint] = useState<string>('');
   const [tokenInput, setTokenInput] = useState<TokenInfo | ApiV3Token | null>(null);
   const [tokenOutput, setTokenOutput] = useState<TokenInfo | ApiV3Token | null>(null);
+  const [amountIn, setAmountIn] = useState<string>('')
+  const [amountOut, setAmountOut] = useState<string>('')
+  const [isComputing, setIsComputing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [transactionResp, setTransactionResp] = useState<any>(undefined);
 
-  console.log('Render: inputMint =', inputMint, 'outputMint =', outputMint);
-  const [cacheLoaded, setCacheLoaded] = useState(false)
+  const activeAccount = useActiveAccount();
+
   const isTokenLoaded = tokenMap.size > 0
   const { tokenInfo: unknownTokenA } = useTokenInfo({
     mint: isTokenLoaded && !tokenInput && inputMint ? inputMint : undefined
@@ -82,113 +74,45 @@ export function SwapPanel({
   useEffect(() => {
     if (defaultInput) setInputMint(defaultInput)
     if (defaultOutput && defaultOutput !== defaultInput) setOutputMint(defaultOutput)
-    setCacheLoaded(true)
   }, [defaultInput, defaultOutput])
 
   useEffect(() => {
     setTokenInput(tokenMap.get(inputMint) as ApiV3Token | TokenInfo || null);
-    setTokenOutput(tokenMap.get(outputMint)  as ApiV3Token | TokenInfo || null);
+    setTokenOutput(tokenMap.get(outputMint) as ApiV3Token | TokenInfo || null);
   }, [inputMint, outputMint, tokenMap]);
 
   useEffect(() => {
-    console.log('Effect triggered: inputMint or outputMint changed', { inputMint, outputMint });
-    if (!cacheLoaded) return;
     onInputMintChange?.(inputMint);
     onOutputMintChange?.(outputMint);
     setUrlQuery({ inputMint: mintToUrl(inputMint), outputMint: mintToUrl(outputMint) });
     setSwapPairCache({ inputMint, outputMint });
-  }, [inputMint, outputMint, cacheLoaded, onInputMintChange, onOutputMintChange]);
+  }, [inputMint, outputMint, onInputMintChange, onOutputMintChange]);
 
-  const [amountIn, setAmountIn] = useState<string>('')
-  const [needPriceUpdatedAlert, setNeedPriceUpdatedAlert] = useState(false)
-  const [hasValidAmountOut, setHasValidAmountOut] = useState(false)
-
-  const handleUnwrap = useEvent(() => {
-    onUnWrapping()
-    unWrapSolAct({
-      amount: wsolBalance.rawAmount.toFixed(0),
-      onSent: offUnWrapping,
-      onClose: offUnWrapping,
-      onError: offUnWrapping
-    })
-  })
-
-  const isSwapBaseIn = swapType === 'BaseIn'
-  const { response, data, isLoading, isValidating, error, openTime, mutate } = useSwap({
-    inputMint,
-    outputMint,
-    amount: new Decimal(amountIn || 0)
-      .mul(10 ** ((isSwapBaseIn ? tokenInput?.decimals : tokenOutput?.decimals) || 0))
-      .toFixed(0, Decimal.ROUND_FLOOR),
-    swapType,
-    refreshInterval: isSending || isHightRiskOpen ? 3 * 60 * 1000 : 1000 * 30
-  })
-
-  const onPriceUpdatedConfirm = useEvent(() => {
-    setNeedPriceUpdatedAlert(false)
-    sendingResult.current = response as ApiSwapV1OutSuccess
-  })
-
-  const computeResult = needPriceUpdatedAlert ? sendingResult.current?.data : data
-  const isComputing = isLoading || isValidating
-  const isHighRiskTx = (computeResult?.priceImpactPct || 0) > 5
-
-  const inputAmount =
-    computeResult && tokenInput
-      ? new Decimal(computeResult.inputAmount).div(10 ** tokenInput?.decimals).toFixed(tokenInput?.decimals)
-      : computeResult?.inputAmount || ''
-  const outputAmount =
-    computeResult && tokenOutput
-      ? new Decimal(computeResult.outputAmount).div(10 ** tokenOutput?.decimals).toFixed(tokenOutput?.decimals)
-      : computeResult?.outputAmount || ''
+  const fetchPrice = useCallback(async () => {
+    if (!tokenInput || !tokenOutput || !amountIn) return;
+    setIsComputing(true);
+    setError(null);
+    try {
+      const amount = new Decimal(amountIn).mul(10 ** (tokenInput.decimals || 0)).toFixed(0);
+      const priceData = await getPrice(tokenInput, tokenOutput, amount);
+      setAmountOut(new Decimal(priceData.buyAmount).div(10 ** (tokenOutput.decimals || 0)).toString());
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch price');
+    } finally {
+      setIsComputing(false);
+    }
+  }, [tokenInput, tokenOutput, amountIn]);
 
   useEffect(() => {
-    if (!cacheLoaded) return
-    const [inputMint, outputMint] = [urlToMint(query.inputMint), urlToMint(query.outputMint)]
-    if (inputMint && tokenMap.get(inputMint)) {
-      setInputMint(inputMint)
-      setSwapPairCache({
-        inputMint
-      })
-    }
-    if (outputMint && tokenMap.get(outputMint)) {
-      setOutputMint(outputMint)
-      setSwapPairCache({
-        outputMint
-      })
-    }
-  }, [tokenMap, cacheLoaded])
-
-  useEffect(() => {
-    if (isSending && response && response.data?.outputAmount !== sendingResult.current?.data.outputAmount) {
-      setNeedPriceUpdatedAlert(true)
-    }
-  }, [response?.id, isSending])
-
-  const debounceUpdate = useCallback(
-    debounce(({ outputAmount, isComputing }) => {
-      setHasValidAmountOut(Number(outputAmount) !== 0 || isComputing)
-    }, 150),
-    []
-  )
-
-  useEffect(() => {
-    debounceUpdate({ outputAmount, isComputing })
-  }, [outputAmount, isComputing])
+    fetchPrice();
+  }, [fetchPrice]);
 
   const handleInputChange = useCallback((val: string) => {
-    setSwapType('BaseIn')
-    setAmountIn(val)
-  }, [])
-
-  const handleInput2Change = useCallback((val: string) => {
-    setSwapType('BaseOut')
     setAmountIn(val)
   }, [])
 
   const handleSelectToken = useCallback((token: TokenInfo | ApiV3Token, side: 'input' | 'output') => {
-    console.log(`handleSelectToken called: side = ${side}, newTokenAddress = ${token.address}`);
-    
     if (side === 'input') {
       if (token.address === outputMint) {
         setInputMint(token.address);
@@ -205,18 +129,14 @@ export function SwapPanel({
       }
     }
 
-    // Check if we need to reverse the direction based on token priorities
     if (side === 'input' && getMintPriority(token.address) > getMintPriority(outputMint)) {
-      console.log('Reversing direction: input priority > output priority');
       onDirectionNeedReverse?.();
     } else if (side === 'output' && getMintPriority(inputMint) > getMintPriority(token.address)) {
-      console.log('Reversing direction: input priority > output priority');
       onDirectionNeedReverse?.();
     }
   }, [inputMint, outputMint, onDirectionNeedReverse]);
 
   const handleChangeSide = useCallback(() => {
-    console.log('handleChangeSide called');
     setInputMint(outputMint);
     setOutputMint(inputMint);
     setSwapPairCache({
@@ -225,78 +145,39 @@ export function SwapPanel({
     });
   }, [inputMint, outputMint]);
 
-  const balanceAmount = getTokenBalanceUiAmount({ mint: inputMint, decimals: tokenInput?.decimals }).amount
-  const balanceNotEnough = balanceAmount.lt(inputAmount || 0) ? t('error.balance_not_enough') : undefined
-  const isSolFeeNotEnough = inputAmount && isSolWSol(inputMint || '') && balanceAmount.sub(inputAmount || 0).lt(DEFAULT_SOL_RESERVER)
-  const swapError = (error && i18n.exists(`swap.error_${error}`) ? t(`swap.error_${error}`) : error) || balanceNotEnough
-  const isPoolNotOpenError = !!swapError && !!openTime
-
-  const handleHighRiskConfirm = useEvent(() => {
-    offHightRiskOpen()
-    handleClickSwap()
-  })
-
-  const handleClickSwap = () => {
-    if (!response) return
-    sendingResult.current = response as ApiSwapV1OutSuccess
-    onSending()
-    swapTokenAct({
-      swapResponse: response as ApiSwapV1OutSuccess,
-      wrapSol: tokenInput?.address === PublicKey.default.toString(),
-      unwrapSol: tokenOutput?.address === PublicKey.default.toString(),
-      onCloseToast: offSending,
-      onConfirmed: () => {
-        setAmountIn('')
-        setNeedPriceUpdatedAlert(false)
-        offSending()
-      },
-      onError: () => {
-        offSending()
-        mutate()
-      }
-    })
-  }
-
-  const getCtrSx = (type: 'BaseIn' | 'BaseOut') => {
-    if (!new Decimal(amountIn || 0).isZero() && swapType === type) {
-      return {
-        border: `1px solid ${colors.semanticFocus}`,
-        boxShadow: `0px 0px 12px 6px ${colors.semanticFocusShadow}`
-      }
+  const handleSwap = async () => {
+    if (!activeAccount?.address) return;
+    const amount = BigInt(new Decimal(amountIn).mul(10 ** (tokenInput?.decimals || 0)).toFixed(0));
+    try {
+      const resp = await trySwap(
+        activeAccount.address,
+        tokenInput?.address || "",
+        tokenOutput?.address || "",
+        amount  // Pass the BigInt amount here
+      );
+      setTransactionResp(resp);
+    } catch (err) {
+      console.error(err);
+      setError('Swap failed');
     }
-    return { border: '1px solid transparent' }
-  }
+  };
 
-  const handleRefresh = useEvent(() => {
-    if (isSending || isHightRiskOpen) return
-    mutate()
-    if (Date.now() - refreshTokenAccTime < 10 * 1000) return
-    fetchTokenAccountAct({})
-  })
-
-  const outputFilterFn = useEvent((token: TokenInfo) => {
-    if (isSolWSol(tokenInput?.address) && isSolWSol(token.address)) return false
-    return true
-  })
-  const inputFilterFn = useEvent((token: TokenInfo) => {
-    if (isSolWSol(tokenOutput?.address) && isSolWSol(token.address)) return false
-    return true
-  })
+  const balanceAmount = getTokenBalanceUiAmount({ mint: inputMint, decimals: tokenInput?.decimals }).amount
+  const balanceNotEnough = balanceAmount.lt(amountIn || 0) ? t('error.balance_not_enough') : undefined
+  const swapError = error || balanceNotEnough
 
   return (
     <>
-  <Flex mb={[4, 5]} direction="column">
+      <Flex mb={[4, 5]} direction="column">
         <TokenInput
           name="swap"
           key={`input-${inputMint}`}
           topLeftLabel={t('swap.from_label')}
-          ctrSx={getCtrSx('BaseIn')}
           token={tokenInput || inputMint}
-          value={isSwapBaseIn ? amountIn : inputAmount}
-          readonly={swapDisabled || (!isSwapBaseIn && isComputing)}
+          value={amountIn}
+          readonly={swapDisabled}
           disableClickBalance={swapDisabled}
           onChange={(v) => handleInputChange(v)}
-          filterFn={inputFilterFn}
           onTokenChange={(token) => handleSelectToken(token, 'input')}
           defaultUnknownToken={unknownTokenA}
         />
@@ -305,111 +186,48 @@ export function SwapPanel({
           name="swap"
           key={`output-${outputMint}`}
           topLeftLabel={t('swap.to_label')}
-          ctrSx={getCtrSx('BaseOut')}          
           token={tokenOutput || outputMint}
-          value={isSwapBaseIn ? outputAmount : amountIn}
-          readonly={swapDisabled || (isSwapBaseIn && isComputing)}
-          onChange={handleInput2Change}
-          filterFn={outputFilterFn}
+          value={amountOut}
+          readonly={true}
           onTokenChange={(token) => handleSelectToken(token, 'output')}
           defaultUnknownToken={unknownTokenB}
         />
       </Flex>
-      {/* swap info */}
-      <Collapse in={hasValidAmountOut} animateOpacity>
-        <Box mb={[4, 5]}>
-          SWAP INFO BOARD WAS HERE
-         {/*  <SwapInfoBoard
-            amountIn={amountIn}
-            tokenInput={tokenInput}
-            tokenOutput={tokenOutput}
-            isComputing={isComputing && !isSending}
-            computedSwapResult={computeResult}
-            onRefresh={handleRefresh}
-          /> */}
-        </Box>
-      </Collapse>
 
-      <Collapse in={needPriceUpdatedAlert}>
-        <Box pb={[4, 5]}>
-          <SwapPriceUpdatedAlert onConfirm={onPriceUpdatedConfirm} />
-        </Box>
-      </Collapse>
-      {isSolFeeNotEnough ? (
-        <Flex
-          rounded="xl"
-          p="2"
-          mt="-2"
-          mb="3"
-          fontSize="sm"
-          bg={'rgba(255, 78, 163,0.1)'}
-          color={colors.semanticError}
-          alignItems="start"
-          justifyContent="center"
-        >
-          <WarningIcon style={{ marginTop: '2px', marginRight: '4px' }} stroke={colors.semanticError} />
-          <Text>{t('swap.error_sol_fee_not_insufficient', { amount: formatToRawLocaleStr(DEFAULT_SOL_RESERVER) })}</Text>
-        </Flex>
-      ) : null}
-      {wsolBalance.isZero ? null : (
-        <Flex
-          rounded="md"
-          mt="-2"
-          mb="3"
-          fontSize="xs"
-          fontWeight={400}
-          bg={colors.backgroundTransparent07}
-          alignItems="center"
-          px="4"
-          py="2"
-          gap="1"
-          color={colors.textSecondary}
-        >
-          <CircleInfo />
-          <Trans
-            i18nKey={'swap.unwrap_wsol_info'}
-            values={{
-              amount: wsolBalance.text
-            }}
-            components={{
-              sub: isUnWrapping ? <Progress /> : <Text cursor="pointer" color={colors.textLink} onClick={handleUnwrap} />
-            }}
-          />
-        </Flex>
-      )}
-      <ConnectedButton
-        isDisabled={new Decimal(amountIn || 0).isZero() || !!swapError || needPriceUpdatedAlert || swapDisabled}
-        isLoading={isComputing || isSending}
-        loadingText={<div>{isSending ? t('transaction.transaction_initiating') : isComputing ? t('swap.computing') : ''}</div>}
-        onClick={isHighRiskTx ? onHightRiskOpen : handleClickSwap}
-      >
-        <Text>
-          {swapDisabled ? t('common.disabled') : swapError || t('swap.title')}
-          {isPoolNotOpenError ? ` ${dayjs(Number(openTime) * 1000).format('YYYY/M/D HH:mm:ss')}` : null}
+      {swapError && (
+        <Text color={colors.semanticError} mb={3}>
+          {swapError}
         </Text>
-      </ConnectedButton>
-      <HighRiskAlert
-        isOpen={isHightRiskOpen}
-        onClose={offHightRiskOpen}
-        onConfirm={handleHighRiskConfirm}
-        percent={computeResult?.priceImpactPct ?? 0}
-      />
-    </>
-  )
-}
+      )}
 
-function SwapPriceUpdatedAlert({ onConfirm }: { onConfirm: () => void }) {
-  const { t } = useTranslation()
-  return (
-    <HStack bg={colors.backgroundDark} padding={'8px 16px'} rounded={'xl'} justify={'space-between'}>
-      <HStack color={colors.textSecondary}>
-        <Text fontSize={'sm'}>{t('swap.alert_price_updated')}</Text>
-        <QuestionToolTip label={t('swap.alert_price_updated_tooltip')} />
-      </HStack>
-      <Button size={['sm', 'md']} onClick={onConfirm}>
-        {t('swap.alert_price_updated_button')}
-      </Button>
-    </HStack>
+      {transactionResp ? (
+        <TransactionButton
+          transaction={() => transactionResp}
+          onTransactionConfirmed={() => {
+            setAmountIn('')
+            setAmountOut('')
+            setTransactionResp(undefined)
+          }}
+          onError={(error) => {
+            console.error('Transaction failed:', error)
+            setError('Transaction failed. Please try again.')
+          }}
+        >
+          Swap
+        </TransactionButton>
+      ) : (
+        <ConnectedButton
+          isDisabled={!amountIn || !!swapError || swapDisabled}
+          isLoading={isComputing}
+          loadingText={<div>{isComputing ? t('swap.computing') : ''}</div>}
+          onClick={handleSwap}
+        >
+          <Text>
+            {swapDisabled ? t('common.disabled') : swapError || t('swap.title')}
+          </Text>
+        </ConnectedButton>
+      )}
+    </>
   )
 }
 
@@ -433,8 +251,4 @@ function SwapIcon(props: { onClick?: () => void }) {
       {isHover ? <SwapButtonTwoTurnIcon /> : <SwapButtonOneTurnIcon />}
     </SimpleGrid>
   )
-}
-
-function Progress() {
-  return <CircularProgress isIndeterminate size="16px" />
 }

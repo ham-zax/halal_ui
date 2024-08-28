@@ -188,7 +188,7 @@ function AppNavLayout({
                 url: "https://halal.io",
             }}
             chain={ethereum}
-            chains={[sepolia, polygon, ethereum]}
+            chains={[polygon, ethereum]}
           />
         </Flex>
       </HStack>

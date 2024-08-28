@@ -1,6 +1,7 @@
 import { sepolia } from "thirdweb/chains";
-import { prepareTransaction } from "thirdweb";
+import { Chain, prepareTransaction } from "thirdweb";
 import { client } from "../thirdweb/client";
+import { useActiveWalletChain } from "thirdweb/react";
 
 function qs(obj: any) {
     return Object.keys(obj)
@@ -37,10 +38,17 @@ async function getQuote(fm: string, to: string, from_amount: bigint) {
     return swapQuoteJSON;
 }
 
-export async function trySwap(account: string, fm: string, to: string, from_amount: bigint) {
-    const swapQuoteJSON = await getQuote(fm, to, from_amount);
-    swapQuoteJSON.chain = sepolia;
-    swapQuoteJSON.client = client;
-    const transaction = prepareTransaction(swapQuoteJSON);
-    return transaction;
-}
+export async function trySwap(
+    account: string, 
+    fm: string, 
+    to: string, 
+    from_amount: bigint,
+    activeChain: Chain  // Add this parameter
+  ) {
+      const swapQuoteJSON = await getQuote(fm, to, from_amount);
+      
+      swapQuoteJSON.chain = activeChain;
+      swapQuoteJSON.client = client;
+      const transaction = prepareTransaction(swapQuoteJSON);
+      return transaction;
+  }

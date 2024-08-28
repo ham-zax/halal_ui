@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     
     try {
         console.log('Fetching from 0x API with params:', params);
-        const response = await fetch(`https://sepolia.api.0x.org/swap/v1/price?${qs(params)}`, { headers });
+        const response = await fetch(`https://api.0x.org/swap/v1/price?${qs(params)}`, { headers });
         console.log('0x API response status:', response.status);
         const swapPriceJSON = await response.json();
         console.log('0x API response:', swapPriceJSON);

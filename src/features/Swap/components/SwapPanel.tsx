@@ -1,8 +1,6 @@
-import { Box, Grid, GridItem, HStack, VStack, useClipboard, Button, Flex, Text, SimpleGrid, CircularProgress } from '@chakra-ui/react'
-import { PublicKey } from '@solana/web3.js'
+import { Box, Flex, HStack, Text, SimpleGrid, Collapse } from '@chakra-ui/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { shallow } from 'zustand/shallow'
 import Decimal from 'decimal.js'
 
 import ConnectedButton from '@/components/ConnectedButton'
@@ -12,22 +10,19 @@ import { useHover } from '@/hooks/useHover'
 import { Token, useTokenAccountStore, useTokenStore } from '@/store'
 import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
-import { urlToMint, mintToUrl, isSolWSol, getMintPriority } from '@/utils/token'
+import { urlToMint, mintToUrl, getMintPriority } from '@/utils/token'
 import { useRouteQuery, setUrlQuery } from '@/utils/routeTools'
-import { formatToRawLocaleStr } from '@/utils/numberish/formatter'
-import { debounce } from '@/utils/functionMethods'
 import useTokenInfo from '@/hooks/token/useTokenInfo'
 
 import SwapButtonTwoTurnIcon from '@/icons/misc/SwapButtonTwoTurnIcon'
 import SwapButtonOneTurnIcon from '@/icons/misc/SwapButtonOneTurnIcon'
-import CircleInfo from '@/icons/misc/CircleInfo'
-import WarningIcon from '@/icons/misc/WarningIcon'
 
 import { useActiveAccount, TransactionButton, useWalletBalance, useActiveWalletChain } from "thirdweb/react"
 
 import { getSwapPairCache, setSwapPairCache } from '../util'
 import { getPrice, trySwap } from '@/utils/0x/swapUtils'
 import { client } from '@/utils/thirdweb/client'
+import { SwapInfoBoard } from './SwapInfoBoard'
 
 export function SwapPanel({
   onInputMintChange,
@@ -38,7 +33,7 @@ export function SwapPanel({
   onOutputMintChange?: (mint: string) => void
   onDirectionNeedReverse?(): void
 }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const query = useRouteQuery<{ inputMint: string; outputMint: string }>()
   const [urlInputMint, urlOutputMint] = [urlToMint(query.inputMint), urlToMint(query.outputMint)]
   const { inputMint: cacheInput, outputMint: cacheOutput } = getSwapPairCache()
@@ -46,10 +41,6 @@ export function SwapPanel({
 
   const { swap: swapDisabled = false } = useAppStore().featureDisabled
   const tokenMap = useTokenStore((s) => s.tokenMap)
-  const [getTokenBalanceUiAmount, fetchTokenAccountAct, refreshTokenAccTime] = useTokenAccountStore(
-    (s) => [s.getTokenBalanceUiAmount, s.fetchTokenAccountAct, s.refreshTokenAccTime],
-    shallow
-  )
 
   const [inputMint, setInputMint] = useState<string>('');
   const [outputMint, setOutputMint] = useState<string>('');
@@ -60,6 +51,7 @@ export function SwapPanel({
   const [isComputing, setIsComputing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [transactionResp, setTransactionResp] = useState<any>(undefined);
+  const [hasValidAmountOut, setHasValidAmountOut] = useState(false)
 
   const activeAccount = useActiveAccount();
   const activeChain = useActiveWalletChain();
@@ -68,10 +60,9 @@ export function SwapPanel({
     address: activeAccount?.address,
     client: client,
     chain: activeChain,
-    tokenAddress: inputMint // Use this if inputMint is the token address
+    tokenAddress: inputMint
   });
-  console.log('inputTokenBalance:', inputTokenBalance);
-  
+
   const isTokenLoaded = tokenMap.size > 0
   const { tokenInfo: unknownTokenA } = useTokenInfo({
     mint: isTokenLoaded && !tokenInput && inputMint ? inputMint : undefined
@@ -79,6 +70,15 @@ export function SwapPanel({
   const { tokenInfo: unknownTokenB } = useTokenInfo({
     mint: isTokenLoaded && !tokenOutput && outputMint ? outputMint : undefined
   })
+
+  const [swapDetails, setSwapDetails] = useState({
+    price: '',
+    estimatedGas: '',
+    priceImpact: '',
+    route: '',
+    minimumReceived: '',
+    otherAmountThreshold: ''
+  });
 
   useEffect(() => {
     if (defaultInput) setInputMint(defaultInput)
@@ -96,12 +96,7 @@ export function SwapPanel({
     setUrlQuery({ inputMint: mintToUrl(inputMint), outputMint: mintToUrl(outputMint) });
     setSwapPairCache({ inputMint, outputMint });
   }, [inputMint, outputMint, onInputMintChange, onOutputMintChange]);
-  const [swapDetails, setSwapDetails] = useState({
-    price: '',
-    estimatedGas: '',
-    priceImpact: '',
-    route: ''
-  });
+
   const fetchPrice = useCallback(async () => {
     if (!tokenInput || !tokenOutput || !amountIn) return;
 
@@ -121,18 +116,21 @@ export function SwapPanel({
       setSwapDetails({
         price: price.toFixed(6),
         estimatedGas,
-        priceImpact: priceImpact.mul(100).toFixed(2), // Convert to percentage
+        priceImpact: priceImpact.mul(100).toFixed(2),
         route: priceData.sources.filter((source: { proportion: string }) => source.proportion !== "0")
           .map((source: { name: any; proportion: Decimal.Value }) => `${source.name} (${new Decimal(source.proportion).mul(100).toFixed(0)}%)`)
-          .join(', ')
+          .join(', '),
+        minimumReceived: new Decimal(priceData.buyAmount).mul(0.99).div(10 ** (tokenOutput.decimals || 0)).toFixed(tokenOutput.decimals),
+        otherAmountThreshold: priceData.buyAmount
       });
 
+      setHasValidAmountOut(true);
     } catch (err) {
       console.error('Price fetch error:', err);
       setError('Failed to fetch price');
+      setHasValidAmountOut(false);
     } finally {
       setIsComputing(false);
-      console.log('Price:', swapDetails);
     }
   }, [tokenInput, tokenOutput, amountIn]);
 
@@ -178,7 +176,7 @@ export function SwapPanel({
   }, [inputMint, outputMint]);
 
   const handleSwap = useCallback(async () => {
-    if (!activeAccount?.address || !tokenInput || !tokenOutput || !amountIn) return;
+    if (!activeAccount?.address || !tokenInput || !tokenOutput || !amountIn || !activeChain) return;
 
     const amount = BigInt(new Decimal(amountIn).mul(10 ** (tokenInput.decimals || 0)).toFixed(0));
     try {
@@ -186,14 +184,15 @@ export function SwapPanel({
         activeAccount.address,
         tokenInput.address,
         tokenOutput.address,
-        amount
+        amount,
+        activeChain
       );
       setTransactionResp(resp);
     } catch (err) {
       console.error(err);
       setError('Swap failed');
     }
-  }, [activeAccount, tokenInput, tokenOutput, amountIn]);
+  }, [activeAccount, tokenInput, tokenOutput, amountIn, activeChain]);
 
   const balanceAmount = inputTokenBalance?.displayValue || '0';
   const balanceNotEnough = new Decimal(balanceAmount).lt(amountIn || 0) ? t('error.balance_not_enough') : undefined;
@@ -226,6 +225,19 @@ export function SwapPanel({
           defaultUnknownToken={unknownTokenB}
         />
       </Flex>
+
+      <Collapse in={hasValidAmountOut} animateOpacity>
+        <Box mb={[4, 5]}>
+          <SwapInfoBoard
+            amountIn={amountIn}
+            tokenInput={tokenInput}
+            tokenOutput={tokenOutput}
+            isComputing={isComputing}
+            computedSwapResult={swapDetails}
+            onRefresh={fetchPrice}
+          />
+        </Box>
+      </Collapse>
 
       {swapError && (
         <Text color={colors.semanticError} mb={3}>

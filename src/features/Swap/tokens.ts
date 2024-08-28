@@ -22,7 +22,7 @@ export const TOKENS = [
     },
     {
         "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "decimals": 18,
+        "decimals": 6,
         "logoURI": "https://assets.coingecko.com/coins/images/325/standard/Tether.png",
         "name": "Tether USD",
         "symbol": "USDT"

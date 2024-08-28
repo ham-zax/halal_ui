@@ -1,5 +1,4 @@
 import { Box, Grid, GridItem, HStack, VStack, useClipboard, Button, Flex, Text, SimpleGrid, CircularProgress } from '@chakra-ui/react'
-import { ApiV3Token, TokenInfo } from '@raydium-io/raydium-sdk-v2'
 import { PublicKey } from '@solana/web3.js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +9,7 @@ import ConnectedButton from '@/components/ConnectedButton'
 import TokenInput from '@/components/TokenInput'
 import { useEvent } from '@/hooks/useEvent'
 import { useHover } from '@/hooks/useHover'
-import { useTokenAccountStore, useTokenStore } from '@/store'
+import { Token, useTokenAccountStore, useTokenStore } from '@/store'
 import { useAppStore } from '@/store/mockAppStore'
 import { colors } from '@/theme/cssVariables'
 import { urlToMint, mintToUrl, isSolWSol, getMintPriority } from '@/utils/token'
@@ -53,8 +52,8 @@ export function SwapPanel({
 
   const [inputMint, setInputMint] = useState<string>('');
   const [outputMint, setOutputMint] = useState<string>('');
-  const [tokenInput, setTokenInput] = useState<TokenInfo | ApiV3Token | null>(null);
-  const [tokenOutput, setTokenOutput] = useState<TokenInfo | ApiV3Token | null>(null);
+  const [tokenInput, setTokenInput] = useState<Token | undefined>(undefined);
+  const [tokenOutput, setTokenOutput] = useState<Token | undefined>(undefined);
   const [amountIn, setAmountIn] = useState<string>('')
   const [amountOut, setAmountOut] = useState<string>('')
   const [isComputing, setIsComputing] = useState(false)
@@ -77,8 +76,8 @@ export function SwapPanel({
   }, [defaultInput, defaultOutput])
 
   useEffect(() => {
-    setTokenInput(tokenMap.get(inputMint) as ApiV3Token | TokenInfo || null);
-    setTokenOutput(tokenMap.get(outputMint) as ApiV3Token | TokenInfo || null);
+    setTokenInput(tokenMap.get(inputMint));
+    setTokenOutput(tokenMap.get(outputMint));
   }, [inputMint, outputMint, tokenMap]);
 
   useEffect(() => {
@@ -87,20 +86,43 @@ export function SwapPanel({
     setUrlQuery({ inputMint: mintToUrl(inputMint), outputMint: mintToUrl(outputMint) });
     setSwapPairCache({ inputMint, outputMint });
   }, [inputMint, outputMint, onInputMintChange, onOutputMintChange]);
-
+  const [swapDetails, setSwapDetails] = useState({
+    price: '',
+    estimatedGas: '',
+    priceImpact: '',
+    route: ''
+  });
   const fetchPrice = useCallback(async () => {
     if (!tokenInput || !tokenOutput || !amountIn) return;
+    
     setIsComputing(true);
     setError(null);
+  
     try {
-      const amount = new Decimal(amountIn).mul(10 ** (tokenInput.decimals || 0)).toFixed(0);
-      const priceData = await getPrice(tokenInput, tokenOutput, amount);
-      setAmountOut(new Decimal(priceData.buyAmount).div(10 ** (tokenOutput.decimals || 0)).toString());
+      const sellAmount = new Decimal(amountIn).mul(10 ** (tokenInput.decimals || 0)).toFixed(0);
+      const priceData = await getPrice(tokenInput, tokenOutput, Number(sellAmount));
+  
+      const buyAmount = new Decimal(priceData.buyAmount).div(10 ** (tokenOutput.decimals || 0));
+      const price = new Decimal(priceData.price);
+      const estimatedGas = priceData.estimatedGas;
+      const priceImpact = new Decimal(priceData.estimatedPriceImpact);
+  
+      setAmountOut(buyAmount.toString());
+      setSwapDetails({
+        price: price.toFixed(6),
+        estimatedGas,
+        priceImpact: priceImpact.mul(100).toFixed(2), // Convert to percentage
+        route: priceData.sources.filter((source: { proportion: string }) => source.proportion !== "0")
+          .map((source: { name: any; proportion: Decimal.Value }) => `${source.name} (${new Decimal(source.proportion).mul(100).toFixed(0)}%)`)
+          .join(', ')
+      });
+  
     } catch (err) {
-      console.error(err);
+      console.error('Price fetch error:', err);
       setError('Failed to fetch price');
     } finally {
       setIsComputing(false);
+      console.log('Price:', swapDetails);
     }
   }, [tokenInput, tokenOutput, amountIn]);
 
@@ -112,7 +134,7 @@ export function SwapPanel({
     setAmountIn(val)
   }, [])
 
-  const handleSelectToken = useCallback((token: TokenInfo | ApiV3Token, side: 'input' | 'output') => {
+  const handleSelectToken = useCallback((token: Token, side: 'input' | 'output') => {
     if (side === 'input') {
       if (token.address === outputMint) {
         setInputMint(token.address);

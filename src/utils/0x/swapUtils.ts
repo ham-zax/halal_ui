@@ -9,7 +9,7 @@ function qs(obj: any) {
 }
 
 
-export async function getPrice(fromTokenObj: any, toTokenObj: any, amount: number){
+export async function getPrice(fromTokenObj: any, toTokenObj: any, amount: any){
     const params = {
         sellToken: fromTokenObj?.address,
         buyToken: toTokenObj?.address,

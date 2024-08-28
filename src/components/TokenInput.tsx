@@ -34,6 +34,8 @@ import TokenSelectDialog, { TokenSelectDialogProps } from './TokenSelectDialog'
 import TokenUnknownAddDialog from './TokenSelectDialog/components/TokenUnknownAddDialog'
 import TokenFreezeDialog from './TokenSelectDialog/components/TokenFreezeDialog'
 import { TokenListHandles } from './TokenSelectDialog/components/TokenList'
+import { useActiveAccount, useActiveWalletChain, useWalletBalance  } from 'thirdweb/react'
+import { client } from '@/utils/thirdweb/client'
 
 export const DEFAULT_SOL_RESERVER = 0.01
 export interface TokenInputProps extends Pick<TokenSelectDialogProps, 'filterFn'> {
@@ -141,7 +143,6 @@ function TokenInput(props: TokenInputProps) {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isOpenUnknownTokenConfirm, onOpen: onOpenUnknownTokenConfirm, onClose: onCloseUnknownTokenConfirm } = useDisclosure()
   const { isOpen: isOpenFreezeTokenConfirm, onOpen: onOpenFreezeTokenConfirm, onClose: onCloseFreezeTokenConfirm } = useDisclosure()
-
   const size = inputSize ?? isMobile ? 'sm' : 'md'
   const sizes = {
     inputText: size === 'sm' ? 'lg' : '28px',
@@ -166,20 +167,35 @@ function TokenInput(props: TokenInputProps) {
   const { data: tokenPrice } = useTokenPrice({
     mintList: [token?.address]
   })
+  
+  const activeAccount = useActiveAccount();
+  const activeChain = useActiveWalletChain();
+
+  const { data: inputTokenBalance } = useWalletBalance({
+    address: activeAccount?.address,
+    client: client,
+    chain: activeChain,
+    tokenAddress: token?.address // Use this if inputMint is the token address
+  });
+
+  const tokenInfo = tokenMap.get(token?.address || '');
   const value = shakeValueDecimal(inputValue, token?.decimals)
   const price = tokenPrice[token?.address || '']?.value
   const totalPrice = price && value ? new Decimal(price ?? 0).mul(value).toString() : ''
 
   // balance
   const getTokenBalanceUiAmount = useTokenAccountStore((s) => s.getTokenBalanceUiAmount)
-  const balanceInfo = getTokenBalanceUiAmount({ mint: token?.address || '', decimals: token?.decimals })
-  const balanceAmount = balanceInfo.amount
+
+  const balanceAmount = new Decimal(inputTokenBalance?.displayValue || '0');
   const balanceMaxString = hideBalance
     ? null
-    : trimTrailZero(balanceAmount.mul(maxMultiplier || 1).toFixed(token?.decimals ?? 6, Decimal.ROUND_FLOOR))
+    : trimTrailZero(balanceAmount.mul(maxMultiplier || 1).toFixed(tokenInfo?.decimals ?? 6, Decimal.ROUND_FLOOR));
   const maxString = forceBalanceAmount ? trimTrailZero(String(forceBalanceAmount)) : balanceMaxString
   const maxDecimal = forceBalanceAmount ? new Decimal(forceBalanceAmount) : balanceAmount
-
+  const balanceInfo = {
+    amount: balanceAmount,
+    decimals: tokenInfo?.decimals || 6
+  };
   const displayTokenSettings = useAppStore((s) => s.displayTokenSettings)
 
   const [unknownToken, setUnknownToken] = useState<TokenInfo | ApiV3Token>()
@@ -205,11 +221,11 @@ function TokenInput(props: TokenInputProps) {
   })
 
   const handleClickMax = useEvent(() => {
-    if (disableClickBalance) return
-    if (!maxString) return
-    handleFocus()
-    onChange?.(getBalanceString(maxString))
-  })
+    if (disableClickBalance) return;
+    if (!balanceMaxString) return;
+    handleFocus();
+    onChange?.(getBalanceString(balanceMaxString));
+  });
 
   const handleClickHalf = useEvent(() => {
     if (!maxString) return

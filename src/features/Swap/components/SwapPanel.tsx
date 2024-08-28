@@ -23,10 +23,11 @@ import SwapButtonOneTurnIcon from '@/icons/misc/SwapButtonOneTurnIcon'
 import CircleInfo from '@/icons/misc/CircleInfo'
 import WarningIcon from '@/icons/misc/WarningIcon'
 
-import { useActiveAccount, TransactionButton } from "thirdweb/react"
+import { useActiveAccount, TransactionButton, useWalletBalance, useActiveWalletChain } from "thirdweb/react"
 
 import { getSwapPairCache, setSwapPairCache } from '../util'
 import { getPrice, trySwap } from '@/utils/0x/swapUtils'
+import { client } from '@/utils/thirdweb/client'
 
 export function SwapPanel({
   onInputMintChange,
@@ -61,7 +62,16 @@ export function SwapPanel({
   const [transactionResp, setTransactionResp] = useState<any>(undefined);
 
   const activeAccount = useActiveAccount();
+  const activeChain = useActiveWalletChain();
 
+  const { data: inputTokenBalance } = useWalletBalance({
+    address: activeAccount?.address,
+    client: client,
+    chain: activeChain,
+    tokenAddress: inputMint // Use this if inputMint is the token address
+  });
+  console.log('inputTokenBalance:', inputTokenBalance);
+  
   const isTokenLoaded = tokenMap.size > 0
   const { tokenInfo: unknownTokenA } = useTokenInfo({
     mint: isTokenLoaded && !tokenInput && inputMint ? inputMint : undefined
@@ -94,19 +104,19 @@ export function SwapPanel({
   });
   const fetchPrice = useCallback(async () => {
     if (!tokenInput || !tokenOutput || !amountIn) return;
-    
+
     setIsComputing(true);
     setError(null);
-  
+
     try {
       const sellAmount = new Decimal(amountIn).mul(10 ** (tokenInput.decimals || 0)).toFixed(0);
       const priceData = await getPrice(tokenInput, tokenOutput, Number(sellAmount));
-  
+
       const buyAmount = new Decimal(priceData.buyAmount).div(10 ** (tokenOutput.decimals || 0));
       const price = new Decimal(priceData.price);
       const estimatedGas = priceData.estimatedGas;
       const priceImpact = new Decimal(priceData.estimatedPriceImpact);
-  
+
       setAmountOut(buyAmount.toString());
       setSwapDetails({
         price: price.toFixed(6),
@@ -116,7 +126,7 @@ export function SwapPanel({
           .map((source: { name: any; proportion: Decimal.Value }) => `${source.name} (${new Decimal(source.proportion).mul(100).toFixed(0)}%)`)
           .join(', ')
       });
-  
+
     } catch (err) {
       console.error('Price fetch error:', err);
       setError('Failed to fetch price');
@@ -167,25 +177,26 @@ export function SwapPanel({
     });
   }, [inputMint, outputMint]);
 
-  const handleSwap = async () => {
-    if (!activeAccount?.address) return;
-    const amount = BigInt(new Decimal(amountIn).mul(10 ** (tokenInput?.decimals || 0)).toFixed(0));
+  const handleSwap = useCallback(async () => {
+    if (!activeAccount?.address || !tokenInput || !tokenOutput || !amountIn) return;
+
+    const amount = BigInt(new Decimal(amountIn).mul(10 ** (tokenInput.decimals || 0)).toFixed(0));
     try {
       const resp = await trySwap(
         activeAccount.address,
-        tokenInput?.address || "",
-        tokenOutput?.address || "",
-        amount  // Pass the BigInt amount here
+        tokenInput.address,
+        tokenOutput.address,
+        amount
       );
       setTransactionResp(resp);
     } catch (err) {
       console.error(err);
       setError('Swap failed');
     }
-  };
+  }, [activeAccount, tokenInput, tokenOutput, amountIn]);
 
-  const balanceAmount = getTokenBalanceUiAmount({ mint: inputMint, decimals: tokenInput?.decimals }).amount
-  const balanceNotEnough = balanceAmount.lt(amountIn || 0) ? t('error.balance_not_enough') : undefined
+  const balanceAmount = inputTokenBalance?.displayValue || '0';
+  const balanceNotEnough = new Decimal(balanceAmount).lt(amountIn || 0) ? t('error.balance_not_enough') : undefined;
   const swapError = error || balanceNotEnough
 
   return (
